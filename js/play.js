@@ -12,6 +12,7 @@ import { createFuseWidget } from './ui/fuseWidget.js';
 import { mount as mountLevel } from './ui/levelScreen.js';
 import { mount as mountSet } from './ui/setNumberScreen.js';
 import { createSorobanWidget } from './ui/sorobanWidget.js';
+import { createRunEnd, levelCelebrates } from './runEnd.js';
 import { fuseMsFor, logAnswer, setXp, starsForAccuracy } from './run.js';
 
 /** @typedef {import('./types.js').Pack} Pack */
@@ -42,6 +43,8 @@ const NO_FUSE_MS = Number.MAX_SAFE_INTEGER;
  *   persists the run and returns what the result screen shows
  * @property {(cb: () => void) => number} requestFrame
  * @property {(id: number) => void} cancelFrame
+ * @property {(cb: () => void, ms: number) => number} schedule setTimeout-like; delays the result after a correct final answer
+ * @property {(id: number) => void} cancel clearTimeout-like
  * @property {PlayStrings} [strings]
  */
 
@@ -141,15 +144,30 @@ export function mountPlay(opts) {
     fuse.nextProblem(fuseMs);
   }
 
-  /** @param {{ status: 'done' | 'over', stars: number, xp: number }} run */
-  function finish(run) {
-    finished = true;
+  const runEnd = createRunEnd({
+    schedule: opts.schedule,
+    cancel: opts.cancel,
+    // Stop fuse and stopwatch at the final answer, not after the celebration.
+    stop: () => {
+      const ms = fuse.stop();
+      widget.render(fuse.snapshot());
+      return ms;
+    },
+    deliver: (run) => {
+      const summary = onFinish(run);
+      widget.setRecord(summary.newRecord);
+    },
+  });
+
+  /**
+   * @param {{ status: 'done' | 'over', stars: number, xp: number }} run
+   * @param {boolean} celebrate hold the level screen briefly (correct final answer)
+   */
+  function finish(run, celebrate) {
+    finished = true; // no more settle/frame work: no heart can be lost, no double submit
     if (frameId !== 0) opts.cancelFrame(frameId);
     frameId = 0;
-    const ms = fuse.stop();
-    widget.render(fuse.snapshot());
-    const summary = onFinish({ ...run, ms });
-    widget.setRecord(summary.newRecord);
+    runEnd.end(run, celebrate);
   }
 
   /** Handle whatever the last click or tick changed. Idempotent. */
@@ -165,7 +183,7 @@ export function mountPlay(opts) {
         timeoutPending = false;
         if (s.status === 'playing') fuse.nextProblem(fuseMs);
       }
-      if (s.status !== 'playing') finish({ status: s.status, stars: starsFor(s, pack.starRules), xp: s.xp });
+      if (s.status !== 'playing') finish({ status: s.status, stars: starsFor(s, pack.starRules), xp: s.xp }, levelCelebrates(s));
     } else if (set) {
       const st = set.getState();
       if (st.index > seen) {
@@ -179,7 +197,7 @@ export function mountPlay(opts) {
       }
       if (st.done) {
         const total = setTargets(pack).length;
-        finish({ status: 'done', stars: starsForAccuracy(st.correct, total, pack.starRules), xp: setXp(st.correct) });
+        finish({ status: 'done', stars: starsForAccuracy(st.correct, total, pack.starRules), xp: setXp(st.correct) }, true);
       }
     }
   }
@@ -210,6 +228,7 @@ export function mountPlay(opts) {
       if (frameId !== 0) opts.cancelFrame(frameId);
       frameId = 0;
       finished = true;
+      runEnd.destroy();
       fuse.stop();
       widget.destroy();
       level?.destroy();

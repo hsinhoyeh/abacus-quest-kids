@@ -193,6 +193,8 @@ export function startApp(env) {
           seed: Date.now() >>> 0,
           requestFrame: (cb) => win.requestAnimationFrame(cb),
           cancelFrame: (id) => win.cancelAnimationFrame(id),
+          schedule: (cb, ms) => win.setTimeout(cb, ms),
+          cancel: (id) => win.clearTimeout(id),
           strings: S.play,
           onFinish: (run) => {
             const summary = finishRun(progress, pack, run);
