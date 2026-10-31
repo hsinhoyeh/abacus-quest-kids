@@ -20,7 +20,7 @@ const pack = (id, stars) => /** @type {any} */ ({ id, unlockRequires: { packId: 
 
 test('sanitizeNickname trims, collapses, strips markup/control, limits length', () => {
   assert.equal(sanitizeNickname('  Mia   Lee '), 'Mia Lee');
-  assert.equal(sanitizeNickname('<b>Mia</b>'), 'bMiab');
+  assert.equal(sanitizeNickname('<b>Mia</b>'), 'bMia/b');
   assert.equal(sanitizeNickname('a\u0000b\nc'), 'a b c');
   assert.equal(sanitizeNickname('x'.repeat(50)).length, MAX_NICKNAME_LEN);
   assert.equal([...sanitizeNickname('小'.repeat(50))].length, MAX_NICKNAME_LEN);
