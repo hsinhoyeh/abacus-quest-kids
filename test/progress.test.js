@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createFakeStoragePort } from './fakes.js';
-import { STORAGE_KEY } from '../js/core/parse.js';
+import { STORAGE_KEY, parseState } from '../js/core/parse.js';
 import { createProgress, sanitizeNickname, DEFAULT_UNLOCK_STARS, SESSION_GAP_MS, MAX_NICKNAME_LEN } from '../js/core/progress.js';
 
 const DAY = 86_400_000;
@@ -267,4 +267,95 @@ test('storage that throws on set does not break the store', () => {
 test('storage that throws on get falls back to defaults', () => {
   const p = createProgress({ get: () => { throw new Error('denied'); }, set: () => {} });
   assert.deepEqual(p.listPlayers(), []);
+});
+
+// ---- Tutorial lessons (additive lessonsDone) ----
+
+test('lessons: not done at first; markLessonDone persists and survives a reload', () => {
+  const { p, storage } = make();
+  p.addPlayer('Mia');
+  assert.equal(p.isLessonDone('borrow-1'), false);
+  p.markLessonDone('borrow-1');
+  assert.equal(p.isLessonDone('borrow-1'), true);
+  assert.equal(p.isLessonDone('borrow-2'), false);
+  const again = createProgress(storage);
+  assert.equal(again.isLessonDone('borrow-1'), true);
+  assert.equal(JSON.parse(storage.get(STORAGE_KEY) ?? '{}').players.Mia.lessonsDone['borrow-1'], true);
+});
+
+test('lessons: completion is per player', () => {
+  const { p } = make();
+  p.addPlayer('Mia');
+  p.addPlayer('Leo');
+  p.markLessonDone('carry');
+  p.switchPlayer('Leo');
+  assert.equal(p.isLessonDone('carry'), false);
+  p.switchPlayer('Mia');
+  assert.equal(p.isLessonDone('carry'), true);
+});
+
+test('lessons: no player is a no-op; marking twice is harmless; reserved or empty ids are refused', () => {
+  const { p } = make();
+  p.markLessonDone('carry'); // nobody signed in
+  assert.equal(p.isLessonDone('carry'), false);
+  p.addPlayer('Mia');
+  p.markLessonDone('carry');
+  p.markLessonDone('carry');
+  p.markLessonDone('');
+  p.markLessonDone('__proto__');
+  assert.equal(p.isLessonDone('carry'), true);
+  assert.equal(p.isLessonDone(''), false);
+  assert.equal(p.isLessonDone('__proto__'), false);
+  assert.equal(p.isLessonDone('toString'), false); // no prototype leakage
+});
+
+test('lessons: finishing a lesson gives no XP and no stars (tutorials cannot be farmed)', () => {
+  const { p } = make();
+  p.addPlayer('Mia');
+  p.markLessonDone('borrow-1');
+  assert.equal(p.getXp(), 0);
+  assert.equal(p.getStars('borrow-1'), 0);
+});
+
+// A blob saved before lessons existed: no lessonsDone key anywhere.
+const OLD_BLOB = {
+  version: 1,
+  lang: 'zh-TW',
+  currentPlayer: 'Player1',
+  players: {
+    Player1: { xp: 120, stars: { 'addsub-1': 3 }, bestMs: { 'set-1': 41000 }, log: [{ packId: 'set-1', correct: true, ms: 900, at: 1730000000000 }] },
+    Player2: { xp: 5, stars: {}, bestMs: {}, log: [] },
+  },
+};
+
+test('old blob without lessonsDone loads: progress kept, lessonsDone repaired to empty, then saves it', () => {
+  const storage = createFakeStoragePort();
+  storage.set(STORAGE_KEY, JSON.stringify(OLD_BLOB));
+  const p = createProgress(storage);
+  assert.equal(p.getXp(), 120);
+  assert.equal(p.getStars('addsub-1'), 3);
+  assert.equal(p.getBestMs('set-1'), 41000);
+  assert.equal(p.getLang(), 'zh-TW');
+  assert.equal(p.isLessonDone('borrow-1'), false);
+  p.markLessonDone('borrow-1');
+  const saved = JSON.parse(storage.get(STORAGE_KEY) ?? '{}');
+  assert.deepEqual(saved.players.Player1.lessonsDone, { 'borrow-1': true });
+  assert.deepEqual(saved.players.Player2.lessonsDone, {}); // other players repaired too
+  assert.equal(saved.players.Player1.xp, 120);
+});
+
+test('parseState repairs junk lessonsDone: only true values survive', () => {
+  const s = parseState({
+    version: 1,
+    lang: 'en',
+    currentPlayer: 'Mia',
+    players: {
+      Mia: { xp: 0, stars: {}, bestMs: {}, log: [], lessonsDone: { a: true, b: false, c: 1, d: 'yes', e: null, __proto__: true } },
+      Leo: { xp: 0, stars: {}, bestMs: {}, log: [], lessonsDone: 'nope' },
+      Kai: { xp: 0, stars: {}, bestMs: {}, log: [], lessonsDone: ['a'] },
+    },
+  });
+  assert.deepEqual(s.players['Mia']?.lessonsDone, { a: true });
+  assert.deepEqual(s.players['Leo']?.lessonsDone, {});
+  assert.deepEqual(s.players['Kai']?.lessonsDone, {});
 });

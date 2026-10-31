@@ -103,6 +103,73 @@ export const EN = {
   'soroban.clear': 'Clear',
   'soroban.heaven': 'heaven bead',
   'soroban.earth': 'earth bead {k}',
+
+  // Learn: map section and lesson titles (Lesson.titleKey)
+  'learn.title': 'Learn',
+  'learn.borrowGroup': 'Borrowing',
+  'learn.done': 'Done',
+  'lesson.basics': 'Add and take away: the basics',
+  'lesson.complement5': 'Complement of 5',
+  'lesson.carry': 'Carrying: 7 + 5',
+  'lesson.borrow1': 'Borrow 1: 12 - 5',
+  'lesson.borrow2': 'Borrow 2: 21 - 8',
+  'lesson.borrow3': 'Borrow 3: 100 - 7, zeros in between',
+  'lesson.borrow4': 'Borrow 4: mixed, 53 - 28',
+
+  // Lesson screen
+  'lesson.back': 'Back to map',
+  'lesson.example': 'Example',
+  'lesson.practice': 'Practice {n} of {total}',
+  'lesson.start': 'Start practice',
+  'lesson.nextProblem': 'Next problem',
+  'lesson.finish': 'Finish',
+  'lesson.complete': 'Lesson complete!',
+  'lesson.next': 'Next lesson',
+  'lesson.allDone': 'You finished every lesson!',
+
+  // Tutorial: the rule for each kind of step (keys from core/explain.js KEYS)
+  'tut.direct.add': 'Add {digit} on the {place} rod.',
+  'tut.direct.remove': 'Take away {digit} on the {place} rod.',
+  'tut.c5.add': 'Not enough lower beads. On the {place} rod add 5, then take away {complement}.',
+  'tut.c5.remove': 'On the {place} rod take away 5, then add back {complement}.',
+  'tut.carry.remove': '{digit} will not fit on the {place} rod. Take away {amount} here first, then carry 1 to the left.',
+  'tut.carry.remove.c5': '{digit} will not fit on the {place} rod. Take away {amount} here first, using the 5 bead. Then carry 1 to the left.',
+  'tut.carry.ripple': 'The {place} rod is full. Clear it back to 0 and carry on to the left.',
+  'tut.carry.add': 'Now add 1 on the {place} rod. That is the 10 we carried!',
+  'tut.carry.add.c5': 'Now add 1 on the {place} rod, using the 5 bead. That is the 10 we carried!',
+  'tut.borrow.take': 'Not enough to take away {digit}! Borrow 1 from the {fromPlace} on the left. It is worth 10.',
+  'tut.borrow.take.c5': 'Not enough to take away {digit}! Borrow 1 from the {fromPlace} on the left, using the 5 bead. It is worth 10.',
+  'tut.borrow.nine': 'The {place} is 0, so it has nothing to lend. Make it 9 and pass the 10 along.',
+  'tut.borrow.add': 'Now add {amount} on the {place} rod, because 10 - {digit} = {amount}.',
+  'tut.borrow.add.c5': 'Now add {amount} on the {place} rod, using the 5 bead, because 10 - {digit} = {amount}.',
+
+  // Tutorial: place names for {place}, {fromPlace}, {toPlace}
+  'tut.place.ones': 'ones',
+  'tut.place.tens': 'tens',
+  'tut.place.hundreds': 'hundreds',
+  'tut.place.thousands': 'thousands',
+  'tut.place.tenThousands': 'ten-thousands',
+  // Short captions under the rods of the tutorial soroban
+  'tut.label.ones': '1s',
+  'tut.label.tens': '10s',
+  'tut.label.hundreds': '100s',
+  'tut.label.thousands': '1000s',
+  'tut.label.tenThousands': '10000s',
+
+  // Tutorial: buttons and feedback
+  'tut.progress': 'Step {n} of {total}',
+  'tut.showMe': 'Show me',
+  'tut.yourTurn': 'Your turn',
+  'tut.again': 'Try again',
+  'tut.next': 'Next',
+  'tut.back': 'Back',
+  'tut.replay': 'Replay',
+  'tut.undo': 'Undo',
+  'tut.good': 'Nice! That is right.',
+  'tut.hint': 'Almost! Look at the glowing beads and try again.',
+  'tut.done': 'You did it! Great job!',
+  'tut.modeShow': 'Watch',
+  'tut.modeTry': 'You try',
 };
 
 /** @type {Record<string, string>} */
@@ -201,6 +268,72 @@ export const ZH_TW = {
   'soroban.clear': '清除',
   'soroban.heaven': '上面的珠子',
   'soroban.earth': '下面的珠子 {k}',
+
+  // Learn: map section and lesson titles
+  'learn.title': '學習',
+  'learn.borrowGroup': '借位',
+  'learn.done': '完成了',
+  'lesson.basics': '加減入門',
+  'lesson.complement5': '5 的補數',
+  'lesson.carry': '進位：7 + 5',
+  'lesson.borrow1': '借位 1：12 - 5',
+  'lesson.borrow2': '借位 2：21 - 8',
+  'lesson.borrow3': '借位 3：100 - 7，中間有 0',
+  'lesson.borrow4': '借位 4：混合，53 - 28',
+
+  // Lesson screen
+  'lesson.back': '回地圖',
+  'lesson.example': '範例',
+  'lesson.practice': '練習 {n} / {total}',
+  'lesson.start': '開始練習',
+  'lesson.nextProblem': '下一題',
+  'lesson.finish': '完成',
+  'lesson.complete': '這一課完成了！',
+  'lesson.next': '下一課',
+  'lesson.allDone': '全部的課都完成了！',
+
+  // Tutorial: the rule for each kind of step
+  'tut.direct.add': '在{place}加 {digit}。',
+  'tut.direct.remove': '在{place}減 {digit}。',
+  'tut.c5.add': '下面的珠子不夠了。在{place}先加 5，再減 {complement}。',
+  'tut.c5.remove': '在{place}先減 5，再加回 {complement}。',
+  'tut.carry.remove': '{place}不夠加 {digit}。先在這裡減 {amount}，再向左邊進 1。',
+  'tut.carry.remove.c5': '{place}不夠加 {digit}。先在這裡減 {amount}，要用到上面的珠子。再向左邊進 1。',
+  'tut.carry.ripple': '{place}滿了，變回 0，再往左邊進 1。',
+  'tut.carry.add': '然後在{place}加 1，這就是進位來的 10！',
+  'tut.carry.add.c5': '然後在{place}加 1，要用到上面的珠子。這就是進位來的 10！',
+  'tut.borrow.take': '不夠減{digit}，向左邊的{fromPlace}借 1，借來的 1 等於 10。',
+  'tut.borrow.take.c5': '不夠減{digit}，向左邊的{fromPlace}借 1，要用到上面的珠子，借來的 1 等於 10。',
+  'tut.borrow.nine': '{place}是 0，沒東西可借，變成 9，把借來的 10 傳下去。',
+  'tut.borrow.add': '然後在{place}加 {amount}，因為 10 - {digit} = {amount}。',
+  'tut.borrow.add.c5': '然後在{place}加 {amount}，要用到上面的珠子，因為 10 - {digit} = {amount}。',
+
+  // Tutorial: place names
+  'tut.place.ones': '個位',
+  'tut.place.tens': '十位',
+  'tut.place.hundreds': '百位',
+  'tut.place.thousands': '千位',
+  'tut.place.tenThousands': '萬位',
+  'tut.label.ones': '個位',
+  'tut.label.tens': '十位',
+  'tut.label.hundreds': '百位',
+  'tut.label.thousands': '千位',
+  'tut.label.tenThousands': '萬位',
+
+  // Tutorial: buttons and feedback
+  'tut.progress': '第 {n} / {total} 步',
+  'tut.showMe': '看我做',
+  'tut.yourTurn': '換你做',
+  'tut.again': '再試一次',
+  'tut.next': '下一步',
+  'tut.back': '上一步',
+  'tut.replay': '重看',
+  'tut.undo': '重來',
+  'tut.good': '做對了！很好！',
+  'tut.hint': '差一點！看看發亮的珠子，再試一次。',
+  'tut.done': '你做到了！好棒！',
+  'tut.modeShow': '看',
+  'tut.modeTry': '你來試',
 };
 
 /** @type {Record<Lang, Record<string, string>>} */

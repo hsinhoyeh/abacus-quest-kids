@@ -280,3 +280,79 @@ test('real explain() plans play and complete in Your turn with no unfilled text 
     assert.equal(port.getValue(), op === '+' ? start + operand : start - operand);
   }
 });
+
+test('startMode "try" opens straight in Your turn: rods at the start, no highlight, no animation timer', () => {
+  const t = setup(BORROW, { startMode: 'try' });
+  assert.equal(t.screen.getState().mode, 'try');
+  assert.equal(t.screen.getState().index, 0);
+  assert.equal(t.port.getValue(), 12);
+  assert.deepEqual(t.port.highlighted, []);
+  assert.equal(t.scheduler.pending(), 0);
+  assert.equal(t.root.getAttribute('data-mode'), 'try');
+  t.port.setValue(2);
+  t.port.setValue(7);
+  assert.equal(t.done.length, 1);
+});
+
+test('startMode "try": Show me is still there as a peek, and Your turn restarts the problem', () => {
+  const t = setup(BORROW, { startMode: 'try' });
+  t.btn('showme').click();
+  assert.equal(t.screen.getState().mode, 'show');
+  t.btn('yourturn').click();
+  assert.equal(t.port.getValue(), 12);
+  assert.equal(t.screen.getState().mode, 'try');
+});
+
+test('continueLabel: finishing Your turn shows one Continue button and hides the other controls', () => {
+  let continued = 0;
+  const t = setup(SEVEN, { continueLabel: 'Next problem', onContinue: () => continued++ });
+  const cont = t.btn('continue');
+  assert.equal(cont.hidden, true);
+  assert.equal(cont.textContent, 'Next problem');
+  t.btn('yourturn').click();
+  t.port.setValue(7);
+  assert.equal(cont.hidden, false);
+  for (const r of ['back', 'replay', 'next', 'undo', 'showme', 'yourturn']) assert.equal(t.btn(r).hidden, true, r);
+  assert.equal(t.root.getAttribute('data-done'), 'true');
+  cont.click();
+  assert.equal(continued, 1);
+});
+
+test('without continueLabel the Continue button never shows and Try again is offered as before', () => {
+  const t = setup(SEVEN);
+  t.btn('yourturn').click();
+  t.port.setValue(7);
+  assert.equal(t.btn('continue').hidden, true);
+  assert.equal(t.btn('yourturn').hidden, false);
+  assert.equal(t.btn('yourturn').textContent, 'Try again');
+});
+
+test('try: every intermediate state of a real complement-5 step is waiting, not a hint (heaven first or earth first)', () => {
+  // 3 + 4 on 2 rods: add 5 with the heaven bead, then take away 1 earth bead.
+  const plan = explain({ start: 3, op: '+', operand: 4, rods: 2 });
+  assert.equal(plan.length, 1);
+  assert.equal(plan[0]?.key, 'tut.c5.add');
+  for (const order of [[8, 7], [2, 7]]) {
+    const t = setup(plan, { startMode: 'try' });
+    for (const v of order) t.port.setValue(v);
+    assert.equal(t.screen.getState().hints, 0, `order ${order}`);
+    assert.equal(t.done.length, 1);
+  }
+});
+
+test('try: part-way states on the step rod are fine for carry/borrow steps too, a bead on another rod is not', () => {
+  // 12 - 5: step 1 takes one earth bead off the tens rod, step 2 adds 5 on the ones rod (heaven bead).
+  const plan = explain({ start: 12, op: '-', operand: 5, rods: 2 });
+  const t = setup(plan, { startMode: 'try' });
+  t.port.setValue(2); // step 1 done
+  t.port.setValue(7); // step 2 done
+  assert.equal(t.screen.getState().hints, 0);
+  assert.equal(t.done.length, 1);
+
+  const w = setup(plan, { startMode: 'try' });
+  w.port.setValue(13); // a bead on the ones rod while step 1 is on the tens rod
+  assert.equal(w.screen.getState().hints, 1);
+  w.port.setValue(12);
+  w.port.setValue(22); // the tens rod, but the wrong way (add one instead of take one)
+  assert.equal(w.screen.getState().hints, 2);
+});

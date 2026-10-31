@@ -2,6 +2,7 @@
 // with 0-3 stars; locked packs are disabled and show their requirement.
 
 /** @typedef {import('../types.js').Pack} Pack */
+/** @typedef {import('../types.js').Lesson} Lesson */
 /** @typedef {Pick<ReturnType<typeof import('../core/progress.js').createProgress>, 'isUnlocked' | 'getStars'>} MapProgress */
 
 const STRINGS = {
@@ -14,13 +15,20 @@ const STRINGS = {
   locked: 'Locked',
   requirement: 'Earn {stars} stars in {depth} to unlock',
   starsLabel: '{n} of 3 stars',
+  learnTitle: 'Learn',
+  borrowGroup: 'Borrowing',
+  lessonDone: 'Done',
 };
 
 /** @param {string} s @param {Record<string, string | number>} vars */
 const fill = (s, vars) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));
 
 /**
- * @param {{ root: HTMLElement, packs: readonly Pack[], progress: MapProgress, onSelect: (packId: string) => void, strings?: Partial<typeof STRINGS> }} opts
+ * `lessons` adds a Learn section above the depths (tutorial lessons: never
+ * locked, ticked when done); borrow lessons sit together under a 借位 heading.
+ * @param {{ root: HTMLElement, packs: readonly Pack[], progress: MapProgress, onSelect: (packId: string) => void,
+ *   lessons?: readonly Lesson[], isLessonDone?: (lessonId: string) => boolean, onLesson?: (lessonId: string) => void,
+ *   strings?: Partial<typeof STRINGS> & { lessonTitles?: Record<string, string> } }} opts
  */
 export function mount(opts) {
   const { root, packs, progress, onSelect } = opts;
@@ -29,6 +37,7 @@ export function mount(opts) {
     ...opts.strings,
     depths: { ...STRINGS.depths, ...opts.strings?.depths },
     packTitles: { ...opts.strings?.packTitles },
+    lessonTitles: { ...opts.strings?.lessonTitles },
   };
   const doc = root.ownerDocument;
 
@@ -75,6 +84,44 @@ export function mount(opts) {
     return card;
   }
 
+  /** @param {Lesson} lesson */
+  function lessonCard(lesson) {
+    const done = opts.isLessonDone?.(lesson.id) ?? false;
+    const title = t.lessonTitles[lesson.titleKey] ?? lesson.titleKey;
+    const card = /** @type {HTMLButtonElement} */ (make('button', 'lesson'));
+    card.className = 'btn map-lesson';
+    card.setAttribute('type', 'button');
+    card.setAttribute('data-lesson', lesson.id);
+    card.setAttribute('data-done', String(done));
+    card.setAttribute('aria-label', done ? `${title}, ${t.lessonDone}` : title);
+    const kids = [make('span', 'lesson-title', title)];
+    if (done) {
+      const tick = make('span', 'lesson-done', '\u2713');
+      tick.setAttribute('aria-hidden', 'true');
+      kids.push(tick);
+    }
+    card.replaceChildren(...kids);
+    card.addEventListener('click', () => opts.onLesson?.(lesson.id));
+    return card;
+  }
+
+  /** The Learn section, or null without lessons. */
+  function learnSection() {
+    const lessons = opts.lessons ?? [];
+    if (lessons.length === 0) return null;
+    const sec = make('section', 'learn');
+    const plain = lessons.filter((l) => l.kind !== 'borrow');
+    const borrow = lessons.filter((l) => l.kind === 'borrow');
+    sec.append(make('h2', 'learn-title', t.learnTitle), ...plain.map(lessonCard));
+    if (borrow.length > 0) {
+      const group = make('div', 'learn-group');
+      group.setAttribute('data-group', 'borrow');
+      group.append(make('h3', 'learn-group-title', t.borrowGroup), ...borrow.map(lessonCard));
+      sec.append(group);
+    }
+    return sec;
+  }
+
   function render() {
     const depths = [...new Set([1, 2, 3, 4, 5, ...packs.map((p) => p.depth)])].sort((a, b) => a - b);
     const sections = depths.map((d) => {
@@ -87,7 +134,8 @@ export function mount(opts) {
       );
       return sec;
     });
-    root.replaceChildren(make('h1', 'title', t.title), ...sections);
+    const learn = learnSection();
+    root.replaceChildren(make('h1', 'title', t.title), ...(learn ? [learn] : []), ...sections);
   }
 
   render();

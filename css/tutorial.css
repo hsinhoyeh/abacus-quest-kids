@@ -37,7 +37,7 @@
 }
 .tut[data-mode="try"] .tut-mode { background: var(--grass); border-color: var(--grass-dark); }
 .tut-text {
-  margin: 0; padding: 10px 12px; min-height: 5.2em; display: flex; align-items: center; justify-content: center;
+  margin: 0; padding: 10px 12px; min-height: 5.2em; display: block; text-align: center;
   font: 400 .8rem/1.7 var(--font-pixel), var(--font-body); color: var(--fg);
   background: var(--panel-bg); border: var(--px) solid var(--panel-edge);
   box-shadow: inset 3px 3px 0 var(--panel-hi), 0 var(--px) 0 var(--panel-edge);
@@ -68,13 +68,75 @@
   .rod-label { font-size: .6rem; }
 }
 
-/* ---------- Landscape tablets: soroban in the right column ---------- */
-@media (min-width: 700px) and (orientation: landscape) {
-  .tut { max-width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 32px; row-gap: 12px; align-content: center;
-    grid-template-rows: auto auto auto auto 1fr; grid-template-areas: "head soroban" "text soroban" "feedback soroban" "controls soroban" ". soroban"; }
-  .tut-head { grid-area: head; }
-  .tut-text { grid-area: text; min-height: 0; }
-  .tut-feedback { grid-area: feedback; min-height: 0; }
-  .tut-controls { grid-area: controls; align-self: start; }
-  .tut-soroban { grid-area: soroban; align-self: center; }
+/* ---------- Lesson screen (js/ui/lessonScreen.js) ----------
+   One grid at every size: the step line, the rule text and the feedback beside the soroban,
+   which spans the rows on the right. That keeps the whole lesson inside a 390x844 phone (with
+   or without 注音) and a tablet in either orientation, so Next / Back / Replay / Your turn /
+   Undo never scroll out of reach. On a phone the controls run full width under both columns
+   (thumb height, and they never move when a hint appears); on a tablet they sit in the left
+   column under the rule. */
+.lesson {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; row-gap: 6px; align-content: start;
+  grid-template-rows: auto auto auto auto 1fr auto;
+  grid-template-areas: "head head" "thead soroban" "text soroban" "feedback soroban" ". soroban" "controls controls";
+}
+.lesson-tutorial.tut { display: contents; }
+.lesson-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; }
+.lesson .tut-head { grid-area: thead; flex-wrap: wrap; justify-content: flex-start; gap: 4px 8px; align-self: start; }
+.lesson .tut-text { grid-area: text; min-height: 0; padding: 8px; font-size: .65rem; line-height: 1.7; align-self: start; }
+.lesson .tut-controls { grid-area: controls; align-self: start; margin-top: 4px; gap: 8px; }
+.lesson .tut-controls .btn { min-height: 48px; padding: .3rem .2rem; font-size: .65rem; text-align: center; }
+.lesson .tut-controls .tut-continue { grid-column: 1 / -1; }
+/* Your turn shows only Undo and Show me: one row of two */
+.lesson .tut[data-mode="try"] .tut-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lesson .tut[data-mode="try"] .tut-controls .tut-showme { grid-column: auto; }
+.lesson .tut[data-mode="try"] .tut-controls .tut-continue { grid-column: 1 / -1; }
+.lesson .tut-feedback { grid-area: feedback; min-height: 0; font-size: .65rem; line-height: 1.6; align-self: start; }
+.lesson .tut-soroban { grid-area: soroban; align-self: start; }
+/* Undo is the reset here, and the Clear button only costs height. */
+.lesson .tut-soroban .soroban-clear { display: none; }
+.lesson .soroban-readout { margin-bottom: 6px; padding: 0 10px; font-size: 1rem; line-height: 1.6; }
+.lesson .lesson-to-map { min-height: 44px; min-width: 44px; padding: .3rem .6rem; font-size: .55rem; }
+.lesson-stage { flex: 1 1 auto; text-align: center; font: 400 .55rem/1.6 var(--font-pixel), var(--font-body); color: var(--gold); text-shadow: 2px 2px 0 var(--dirt-dark); }
+.lesson-problem { font: 400 1.1rem/1.4 var(--font-pixel), var(--font-body); color: var(--gold); text-shadow: 2px 2px 0 var(--dirt-dark); white-space: nowrap; }
+.screen-learn { padding: 8px; margin-top: 4px; }
+/* The lesson title is on the map card and in the head below; on a phone it only costs height. */
+.lesson-heading { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.lesson-complete { grid-area: auto; grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 28px 0 12px; }
+.lesson-complete-title { margin: 0; font-size: 1.1rem; line-height: 1.6; }
+.lesson-all-done { margin: 0; font: 400 .8rem/1.7 var(--font-pixel), var(--font-body); }
+.lesson-complete .btn { width: min(100%, 360px); min-height: 64px; }
+@media (prefers-color-scheme: light) {
+  .lesson-stage, .lesson-problem { color: #7a4b00; text-shadow: none; }
+}
+/* 注音 doubles the width of a character: smaller type and shorter rows so a sentence still wraps in a 180 px column */
+:root:lang(zh-TW) .lesson .tut-text { font-size: .85rem; line-height: 1.9; padding: 6px; }
+:root:lang(zh-TW) .lesson .tut-feedback { font-size: .85rem; line-height: 1.9; }
+:root:lang(zh-TW) .lesson .tut-controls .btn { font-size: .8rem; line-height: 1.5; padding: .2rem .1rem; }
+:root:lang(zh-TW) .lesson .tut-progress, :root:lang(zh-TW) .lesson .tut-mode { font-size: .75rem; line-height: 1.8; }
+:root:lang(zh-TW) .lesson .lesson-to-map, :root:lang(zh-TW) .lesson-stage { font-size: .8rem; line-height: 1.6; }
+
+/* ---------- Tablets (>= 700px, either orientation) ----------
+   The head moves into the left column and the bead size follows the viewport HEIGHT so the
+   seven bead rows fit without scrolling (portrait gets the big beads, landscape the ones that
+   fit; the taller 注音 chrome gets a slightly smaller budget). */
+@media (min-width: 700px) {
+  .screen-learn { --bead: clamp(48px, min(9vw, calc((100dvh - 380px) / 7)), 84px); padding: 12px 24px; }
+  :root:lang(zh-TW) .screen-learn { --bead: clamp(48px, min(9vw, calc((100dvh - 450px) / 7)), 84px); }
+  .lesson-heading { position: static; width: auto; height: auto; margin: 0 0 6px; overflow: visible; clip-path: none; white-space: normal; }
+  .lesson { column-gap: 32px; row-gap: 10px; grid-template-rows: auto auto auto auto auto 1fr; grid-template-areas: "head soroban" "thead soroban" "text soroban" "controls soroban" "feedback soroban" ". soroban"; }
+  .lesson .tut-text { font-size: 1rem; padding: 14px 18px; }
+  .lesson .tut-feedback { font-size: 1rem; }
+  .lesson .tut-controls { gap: 12px; margin-top: 0; }
+  .lesson .tut-controls .btn { min-height: 56px; font-size: .8rem; }
+  .lesson .lesson-to-map { font-size: .65rem; }
+  .lesson-stage { font-size: .7rem; }
+  .lesson-problem { font-size: 1.4rem; }
+  .lesson .tut-progress { font-size: .8rem; }
+  .lesson .tut-mode { font-size: .7rem; }
+  .lesson .soroban-readout { margin-bottom: 8px; padding: 4px 14px; font-size: 1.5rem; }
+  :root:lang(zh-TW) .lesson .tut-text, :root:lang(zh-TW) .lesson .tut-feedback { font-size: 1.05rem; }
+  :root:lang(zh-TW) .lesson .tut-controls .btn { font-size: .9rem; padding: .3rem .2rem; }
+  :root:lang(zh-TW) .lesson .tut-progress, :root:lang(zh-TW) .lesson .tut-mode { font-size: .9rem; }
+  :root:lang(zh-TW) .lesson .lesson-to-map, :root:lang(zh-TW) .lesson-stage { font-size: .9rem; }
 }

@@ -95,7 +95,7 @@ export function createProgress(storage, opts = {}) {
       if (Object.keys(state.players).some((n) => n.toLowerCase() === lower)) {
         return { ok: false, reason: 'duplicate' };
       }
-      state.players[name] = { xp: 0, stars: {}, bestMs: {}, log: [] };
+      state.players[name] = { xp: 0, lessonsDone: {}, stars: {}, bestMs: {}, log: [] };
       if (state.currentPlayer === null) state.currentPlayer = name;
       save();
       return { ok: true, name };
@@ -151,6 +151,22 @@ export function createProgress(storage, opts = {}) {
       p.bestMs[packId] = ms;
       save();
       return true;
+    },
+
+    /** @param {string} lessonId @returns {boolean} */
+    isLessonDone: (lessonId) => {
+      const p = me();
+      return p !== null && Object.hasOwn(p.lessonsDone, lessonId);
+    },
+    /**
+     * Tutorials give no XP and are never locked: completion is just a flag.
+     * @param {string} lessonId
+     */
+    markLessonDone(lessonId) {
+      const p = me();
+      if (!p || typeof lessonId !== 'string' || lessonId === '' || RESERVED.has(lessonId)) return;
+      p.lessonsDone[lessonId] = true;
+      save();
     },
 
     getXp: () => me()?.xp ?? 0,

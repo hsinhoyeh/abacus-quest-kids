@@ -72,6 +72,7 @@ test('parseState keeps a valid blob', () => {
     players: {
       Mia: {
         xp: 30,
+        lessonsDone: { 'borrow-1': true },
         stars: { 'surface-1': 3 },
         bestMs: { 'surface-1': 41000 },
         log: [{ packId: 'surface-1', correct: true, ms: 3200, at: 1730000000000 }],
@@ -79,6 +80,16 @@ test('parseState keeps a valid blob', () => {
     },
   };
   assert.deepEqual(parseState(blob), blob);
+});
+
+test('parseState repairs an old blob that has no lessonsDone (fixture saved before lessons)', () => {
+  const old = {
+    version: 1,
+    lang: 'en',
+    currentPlayer: 'Mia',
+    players: { Mia: { xp: 30, stars: { 'surface-1': 3 }, bestMs: {}, log: [] } },
+  };
+  assert.deepEqual(parseState(old).players['Mia'], { xp: 30, lessonsDone: {}, stars: { 'surface-1': 3 }, bestMs: {}, log: [] });
 });
 
 test('parseState repairs: bad lang, dangling currentPlayer, junk fields', () => {

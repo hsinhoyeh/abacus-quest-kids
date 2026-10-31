@@ -262,6 +262,25 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
 .map-best { font: 400 .6rem/1.4 var(--font-pixel), var(--font-body); color: var(--lapis-dark); }
 .map-empty { margin: 4px 0; }
 
+/* Learn section (tutorial lessons), above the depths. Never locked; a green tick when done. */
+.map-learn {
+  margin: 12px 0; padding: 12px 10px; color: #fff; border: var(--px) solid var(--panel-edge);
+  background-color: var(--lapis-dark);
+  background-image: linear-gradient(rgba(255,255,255,.07) 50%, transparent 50%), linear-gradient(90deg, rgba(255,255,255,.07) 50%, transparent 50%);
+  background-size: 32px 32px;
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.2), inset -3px -3px 0 rgba(0,0,0,.3);
+}
+.map-learn-title { margin: 0 0 8px; color: #fff; text-shadow: 2px 2px 0 rgba(0,0,0,.6); }
+.map-learn-group { margin-top: 14px; padding: 8px; border: 3px dashed rgba(255,255,255,.55); }
+.map-learn-group-title { margin: 0 0 2px; font-size: .8rem; color: var(--gold); text-shadow: 2px 2px 0 rgba(0,0,0,.6); }
+.map-lesson {
+  display: flex; width: 100%; justify-content: space-between; gap: 10px; min-height: 56px; margin: 8px 0 0;
+  font-size: .65rem; line-height: 1.7; text-align: left; text-shadow: none;
+}
+.map-lesson-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.map-lesson-done { flex: none; font: 700 1.5rem/1 var(--font-body); color: var(--grass-dark); }
+.map-lesson[data-done="true"] { background: #b9e6a0; }
+
 /* ---------- Play (js/play.js + level / set screens) ---------- */
 .play-title { margin-bottom: 8px; }
 .fuse__count:empty { min-height: 0; }

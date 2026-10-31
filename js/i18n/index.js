@@ -76,8 +76,20 @@ export function screenStrings(raw) {
   /** @type {Record<number, string>} */
   const depths = {};
   for (let d = 1; d <= 5; d++) depths[d] = raw(`map.depth.${d}`);
+  /** The tutorial screens read their strings by the full `tut.*` / `lesson.*` key. */
+  /** @type {Record<string, string>} */
+  const tutorial = {};
+  /** @type {Record<string, string>} */
+  const lesson = {};
+  for (const k of Object.keys(TABLES.en)) {
+    if (k.startsWith('tut.')) tutorial[k] = raw(k);
+    else if (k.startsWith('lesson.')) lesson[k] = raw(k);
+  }
   return {
     packTitles,
+    tutorial,
+    lesson,
+    learn: pick('learn', ['title', 'borrowGroup', 'done']),
     map: { ...pick('map', ['title', 'depthFallback', 'noPacks', 'locked', 'requirement', 'starsLabel']), depths },
     parent: pick('parent', ['title', 'summary', 'sessions', 'accuracy', 'median', 'empty', 'noPlayer']),
     picker: {
