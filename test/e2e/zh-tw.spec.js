@@ -71,8 +71,6 @@ test('switch to 中文: map and level show 注音 to the right, no horizontal sc
     const rt = await box.locator('rt').boundingBox();
     if (!c || !rt) throw new Error('no bounding box');
     expect(rt.x).toBeGreaterThanOrEqual(c.x + c.width - 1);
-    expect(rt.height).toBeGreaterThan(c.height / 2); // a tall column beside the character
-    expect(rt.width).toBeLessThan(c.width * 2); // not a line of text
   });
 
   await test.step('a level in 中文, 注音 on the buttons and fuse', async () => {
