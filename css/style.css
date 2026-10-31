@@ -54,6 +54,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; padding: 16px 12px 32px;
@@ -89,7 +90,7 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
   .level-feedback { color: #1b5e20; text-shadow: none; }
 }
 
-.btn {
+.btn, :is(.picker-add, .picker-player, .level-mine, .level-skip, .level-retry, .set-check, .result-retry, .result-next, .map-pack) {
   display: inline-flex; align-items: center; justify-content: center; gap: .5em;
   min-width: var(--tap); min-height: var(--tap); padding: .6rem 1.1rem;
   font: 400 .8rem/1.4 var(--font-pixel), var(--font-body);
@@ -98,11 +99,11 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
   box-shadow: inset 3px 3px 0 rgba(255,255,255,.45), inset -3px -3px 0 rgba(0,0,0,.3), 0 var(--px) 0 var(--panel-edge);
   touch-action: manipulation; -webkit-tap-highlight-color: transparent; text-decoration: none;
 }
-.btn:active, .btn[aria-pressed="true"] {
+.btn:active, .btn[aria-pressed="true"], :is(.picker-add, .picker-player, .level-mine, .level-skip, .level-retry, .set-check, .result-retry, .result-next, .map-pack):active, .picker-player[aria-pressed="true"] {
   transform: translateY(var(--px)); box-shadow: inset 3px 3px 0 rgba(0,0,0,.3), inset -3px -3px 0 rgba(255,255,255,.2);
 }
-.btn[disabled], .btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
-.btn-primary { background: var(--grass); color: #fff; text-shadow: 2px 2px 0 var(--grass-dark); }
+.btn[disabled], .btn[aria-disabled="true"], :is(.picker-add, .picker-player, .level-mine, .level-skip, .level-retry, .set-check, .result-retry, .result-next, .map-pack)[disabled] { opacity: .5; cursor: not-allowed; }
+.btn-primary, :is(.picker-add, .level-mine, .set-check, .result-next) { background: var(--grass); color: #fff; text-shadow: 2px 2px 0 var(--grass-dark); }
 .btn-gold { background: var(--gold); }
 .btn-danger { background: var(--redstone); color: #fff; text-shadow: 2px 2px 0 var(--redstone-dark); }
 .btn-info { background: var(--lapis); color: #fff; text-shadow: 2px 2px 0 var(--lapis-dark); }
@@ -137,8 +138,8 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
 .stars[data-count] , .hearts[data-count] { min-height: 24px; }
 
 /* Depth-level backgrounds (pure CSS). Apply to a screen/card container. */
-.depth-surface, .depth-cave, .depth-deep, .depth-nether, .depth-end { background-size: 32px 32px, 32px 32px, auto; color: #fff; }
-.depth-surface {
+.map-depth, .depth-surface, .depth-cave, .depth-deep, .depth-nether, .depth-end { background-size: 32px 32px, 32px 32px, auto; color: #fff; }
+.depth-surface, .map-depth[data-depth="1"] {
   background-color: #6ec1ff;
   background-image:
     linear-gradient(rgba(255,255,255,.18) 50%, transparent 50%),
@@ -146,28 +147,28 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
     linear-gradient(180deg, #6ec1ff 0%, #bfe8ff 55%, var(--grass) 55%, var(--grass-dark) 62%, var(--dirt) 62%, var(--dirt-dark) 100%);
   color: #10210a; text-shadow: 1px 1px 0 rgba(255,255,255,.6);
 }
-.depth-cave {
+.depth-cave, .map-depth[data-depth="2"] {
   background-color: #4a4a4a;
   background-image:
     linear-gradient(rgba(0,0,0,.18) 50%, transparent 50%),
     linear-gradient(90deg, rgba(0,0,0,.18) 50%, transparent 50%),
     linear-gradient(180deg, #6b6b6b, #3a3a3a);
 }
-.depth-deep {
+.depth-deep, .map-depth[data-depth="3"] {
   background-color: #1f2430;
   background-image:
     linear-gradient(rgba(0,0,0,.25) 50%, transparent 50%),
     linear-gradient(90deg, rgba(0,0,0,.25) 50%, transparent 50%),
     linear-gradient(180deg, #2a3040, #12151d);
 }
-.depth-nether {
+.depth-nether, .map-depth[data-depth="4"] {
   background-color: #5a1010;
   background-image:
     linear-gradient(rgba(0,0,0,.22) 50%, transparent 50%),
     linear-gradient(90deg, rgba(0,0,0,.22) 50%, transparent 50%),
     linear-gradient(180deg, #8d1b1b, #3a0707);
 }
-.depth-end {
+.depth-end, .map-depth[data-depth="5"] {
   background-color: #1c0b2e;
   background-image:
     linear-gradient(rgba(255,255,255,.06) 50%, transparent 50%),
@@ -227,6 +228,104 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
   box-shadow: inset 3px 3px 0 rgba(255,255,255,.45), inset -3px -3px 0 rgba(0,0,0,.3), 0 var(--px) 0 var(--panel-edge);
 }
 .soroban-clear:active { transform: translateY(var(--px)); background: var(--stone-dark); color: #fff; box-shadow: none; }
+
+/* ---------- App shell (js/app.js) ---------- */
+.topbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;
+  max-width: 720px; margin: 0 auto 8px;
+}
+.topbar-brand { flex-basis: 100%; font: 400 .8rem/1.6 var(--font-pixel), var(--font-body); color: var(--gold); text-shadow: 2px 2px 0 var(--dirt-dark); }
+.topbar .btn { min-height: var(--tap); padding: .4rem .7rem; font-size: .62rem; }
+.topbar-nav { display: contents; }
+.screen { padding: 12px; }
+.screen h1 { font-size: .95rem; overflow-wrap: anywhere; }
+.storage-warning { margin: 0 0 8px; font-size: .85rem; color: var(--redstone); }
+
+/* ---------- Depth map (js/ui/mapScreen.js) ---------- */
+.map-depth {
+  margin: 12px 0; padding: 12px 10px; border: var(--px) solid var(--panel-edge);
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.2), inset -3px -3px 0 rgba(0,0,0,.3);
+}
+.map-depth-title { margin: 0 0 8px; color: #fff; text-shadow: 2px 2px 0 rgba(0,0,0,.6); }
+.map-depth[data-depth="1"] .map-depth-title { color: #10210a; text-shadow: 2px 2px 0 rgba(255,255,255,.6); }
+.map-pack {
+  display: flex; flex-direction: column; gap: 4px; width: 100%; min-height: 64px; margin: 8px 0 0;
+  font-size: .7rem; text-align: center; line-height: 1.6; text-shadow: none;
+}
+.map-pack[disabled] { opacity: .75; }
+.map-stars { font: 1.3rem/1 var(--font-body); color: var(--gold-dark); letter-spacing: 2px; }
+.map-lock { font-size: .6rem; color: var(--redstone-dark); }
+.map-requirement { font: .8rem/1.3 var(--font-body); }
+.map-best { font: 400 .6rem/1.4 var(--font-pixel), var(--font-body); color: var(--lapis-dark); }
+.map-empty { margin: 4px 0; }
+
+/* ---------- Play (js/play.js + level / set screens) ---------- */
+.play-title { margin-bottom: 8px; }
+.fuse__count:empty { min-height: 0; }
+.fuse__start { margin: 8px 0; }
+.fuse--stopwatch .fuse__track { display: none; }
+.play-screen { display: contents; }
+.play-area { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; justify-items: center; margin-top: 8px; }
+.play-addsub .play-area {
+  grid-template-areas: "hearts xp" "problem problem" "soroban soroban" "mine skip" "feedback feedback" "retry retry";
+}
+.play-set .play-area {
+  grid-template-areas: "progress progress" "target target" "soroban soroban" "check check" "feedback feedback";
+}
+.play-area .soroban { grid-area: soroban; }
+.level-hearts { grid-area: hearts; justify-self: start; font-size: 1.8rem; line-height: 1; color: var(--redstone); letter-spacing: 2px; }
+.level-xp {
+  grid-area: xp; justify-self: end; padding: .2rem .6rem; font: 400 .7rem/1.6 var(--font-pixel), var(--font-body);
+  background: var(--grass); color: #fff; border: 3px solid var(--grass-dark);
+}
+.level-problem, .set-target { font: 400 2rem/1.3 var(--font-pixel), var(--font-body); min-height: 1.3em; }
+.level-problem { grid-area: problem; }
+.set-target { grid-area: target; }
+.set-progress { grid-area: progress; font: 400 .7rem/1.6 var(--font-pixel), var(--font-body); }
+.level-mine { grid-area: mine; justify-self: stretch; min-height: 64px; font-size: 1rem; }
+.level-skip { grid-area: skip; justify-self: stretch; min-height: 64px; }
+.set-check { grid-area: check; min-width: 60%; min-height: 64px; font-size: 1rem; }
+.level-retry { grid-area: retry; }
+.play-area .level-feedback, .set-feedback { grid-area: feedback; min-height: 2.5rem; font: 400 .75rem/1.6 var(--font-pixel), var(--font-body); }
+.play-area .soroban-readout { font-size: 1.2rem; }
+/* Feedback colour by outcome; set after the generic .level-feedback rule so it wins in both schemes. */
+.play-area .level-feedback, .play-area .set-feedback { color: var(--readout-fg); text-shadow: none; }
+.play-area [data-outcome="wrong"], .play-area [data-outcome="timeout"], .play-area [data-outcome="over"], .play-area [data-outcome="retry"] { color: #ff8a80; }
+@media (prefers-color-scheme: light) {
+  .topbar-brand { color: #7a4b00; text-shadow: 2px 2px 0 rgba(255,255,255,.6); }
+  .play-area .level-feedback, .play-area .set-feedback { color: #1b5e20; }
+  .play-area [data-outcome="wrong"], .play-area [data-outcome="timeout"], .play-area [data-outcome="over"], .play-area [data-outcome="retry"] { color: #b71c1c; }
+  .map-best { color: var(--lapis-dark); }
+}
+.play-area .soroban-clear { margin-top: 8px; }
+
+/* ---------- Result (js/ui/resultScreen.js) ---------- */
+.result { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.result-pack { margin: 0; font-size: .75rem; }
+.result-title { margin: 0; }
+.result-stars { font: 2.6rem/1 var(--font-body); color: var(--gold); letter-spacing: 4px; text-shadow: 3px 3px 0 var(--gold-dark); }
+.result-record { padding: .4rem 1rem; font: 400 .8rem/1.6 var(--font-pixel), var(--font-body); background: var(--gold); color: var(--on-accent); border: 3px solid var(--gold-dark); }
+.result-xp, .result-time { font: 400 .9rem/1.6 var(--font-pixel), var(--font-body); }
+.result-retry, .result-next { min-width: 60%; min-height: 56px; }
+
+/* ---------- Player picker (js/ui/playerPicker.js) ---------- */
+.picker-players { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.picker-player { font-size: .7rem; }
+.picker-player[aria-pressed="true"] { background: var(--gold); }
+.picker-name-input {
+  display: block; width: 100%; max-width: 320px; min-height: var(--tap); margin: 0 auto 10px; padding: 8px 10px;
+  font: 1.1rem var(--font-body); border: var(--px) solid var(--panel-edge); border-radius: 0; background: #fff; color: #111;
+}
+.picker-add { min-width: 50%; }
+.picker-error { min-height: 1.6em; color: var(--redstone); }
+
+/* ---------- Parent screen (js/ui/parentScreen.js) ---------- */
+.screen-parent { text-align: left; }
+.screen-parent h1 { text-align: center; }
+.parent-summary { font-weight: 700; }
+.parent-pack-row { padding: 8px 0; border-top: 3px solid var(--panel-edge); }
+.parent-pack-row h2 { font-size: .7rem; margin: 0 0 4px; }
+.parent-pack-row p { margin: 0; }
 
 @media (max-width: 420px) {
   :root { --bead: 40px; }
