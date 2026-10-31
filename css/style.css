@@ -1,44 +1,240 @@
-/* Basic blocky look. Theme polish is a separate issue. */
-:root {
-  --bg: #2b2b2b;
-  --fg: #f2f2f2;
-  --stone: #8b8b8b;
-  --stone-dark: #5a5a5a;
-  --gold: #f5c542;
-  --gold-dark: #b8860b;
-  --wood: #6b4a2b;
-  --grass: #5fa83a;
-  --bead: 44px;
+/* Abacus Quest Kids - Minecraft-INSPIRED pixel theme.
+   Original CSS art only. No Mojang/Microsoft assets. Unaffiliated.
+   Font: Press Start 2P (SIL OFL 1.1), self-hosted in fonts/. */
+@import url("fuse.css");
+
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("../fonts/PressStart2P-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
+
+:root {
+  color-scheme: light dark;
+  /* Block palette */
+  --grass: #5fa83a;       --grass-dark: #3d7a22;
+  --dirt: #7a5230;        --dirt-dark: #4a2f18;
+  --stone: #8b8b8b;       --stone-dark: #5a5a5a;  --stone-light: #b9b9b9;
+  --gold: #f5c542;        --gold-dark: #b8860b;
+  --redstone: #d32f2f;    --redstone-dark: #7f1111;
+  --lapis: #2f5fd0;       --lapis-dark: #17338a;
+  --obsidian: #5b2a86;    --obsidian-dark: #1c0b2e;
+  --wood: #6b4a2b;
+  /* Semantic */
+  --bg: #1d2a1a;
+  --bg-2: #243320;
+  --fg: #f4f4f0;
+  --panel-bg: #3a3a3a;
+  --panel-edge: #1b1b1b;
+  --panel-hi: #5e5e5e;
+  --on-accent: #101010;
+  --readout-bg: #0e0e0e;
+  --readout-fg: #7cfc00;
+  --focus: #ffffff;
+  /* Type */
+  --font-pixel: "Press Start 2P", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-body: system-ui, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Heiti TC", sans-serif;
+  /* Sizing */
+  --bead: 44px;
+  --px: 4px;              /* one "pixel" of border */
+  --tap: 48px;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #bfe3a0;
+    --bg-2: #a8d386;
+    --fg: #1d1d1d;
+    --panel-bg: #e7e1d3;
+    --panel-edge: #2b2b2b;
+    --panel-hi: #fffdf5;
+    --readout-bg: #1a1a1a;
+  }
+}
+
 * { box-sizing: border-box; }
-body { margin: 0; padding: 16px 8px; font: 18px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); text-align: center; }
-h1 { font-size: 1.5rem; margin: 0 0 12px; }
-.note { margin: 16px auto 0; max-width: 28em; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; padding: 16px 12px 32px;
+  font: 18px/1.6 var(--font-body);
+  color: var(--fg); background-color: var(--bg); /* explicit fallback */
+  background-image:
+    linear-gradient(45deg, rgba(255,255,255,.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.04) 75%),
+    linear-gradient(45deg, rgba(0,0,0,.06) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.06) 75%);
+  background-size: 32px 32px; background-position: 0 0, 16px 16px;
+  text-align: center; overflow-x: hidden; min-height: 100vh;
+}
+main { max-width: 720px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-pixel), var(--font-body); font-weight: 400; line-height: 1.5; }
+h1 { font-size: 1.05rem; margin: 0 0 16px; color: var(--gold); text-shadow: 3px 3px 0 var(--dirt-dark); }
+h2 { font-size: .95rem; margin: 0 0 12px; }
+h3 { font-size: .85rem; margin: 0 0 8px; }
+.note { margin: 24px auto 0; max-width: 28em; opacity: .85; }
+img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
-.level-target { font-size: 2rem; font-weight: bold; margin: 8px 0; }
-.level-feedback { min-height: 2.5rem; font-size: 1.8rem; font-weight: bold; color: var(--grass); }
+/* ---------- Reusable components (adopt freely) ---------- */
+.panel {
+  position: relative; margin: 12px auto; padding: 16px;
+  background: var(--panel-bg); color: var(--fg);
+  border: var(--px) solid var(--panel-edge);
+  box-shadow: inset var(--px) var(--px) 0 var(--panel-hi),
+              inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 rgba(0,0,0,.35),
+              0 var(--px) 0 var(--panel-edge);
+}
+@media (prefers-color-scheme: light) {
+  .panel { color: #1d1d1d; }
+  h1, .level-target { color: #7a4b00; text-shadow: 2px 2px 0 rgba(255,255,255,.6); }
+  .level-feedback { color: #1b5e20; text-shadow: none; }
+}
 
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5em;
+  min-width: var(--tap); min-height: var(--tap); padding: .6rem 1.1rem;
+  font: 400 .8rem/1.4 var(--font-pixel), var(--font-body);
+  color: var(--on-accent); background: var(--stone);
+  border: var(--px) solid var(--panel-edge); border-radius: 0; cursor: pointer;
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.45), inset -3px -3px 0 rgba(0,0,0,.3), 0 var(--px) 0 var(--panel-edge);
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; text-decoration: none;
+}
+.btn:active, .btn[aria-pressed="true"] {
+  transform: translateY(var(--px)); box-shadow: inset 3px 3px 0 rgba(0,0,0,.3), inset -3px -3px 0 rgba(255,255,255,.2);
+}
+.btn[disabled], .btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--grass); color: #fff; text-shadow: 2px 2px 0 var(--grass-dark); }
+.btn-gold { background: var(--gold); }
+.btn-danger { background: var(--redstone); color: #fff; text-shadow: 2px 2px 0 var(--redstone-dark); }
+.btn-info { background: var(--lapis); color: #fff; text-shadow: 2px 2px 0 var(--lapis-dark); }
+.btn-lg { min-height: 64px; font-size: 1rem; padding: .9rem 1.6rem; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: .4em; min-height: 32px; padding: .2rem .7rem;
+  font: 400 .7rem/1.4 var(--font-pixel), var(--font-body);
+  background: var(--lapis); color: #fff; border: 3px solid var(--lapis-dark);
+  box-shadow: inset 2px 2px 0 rgba(255,255,255,.35);
+}
+.pill-xp { background: var(--grass); border-color: var(--grass-dark); }
+.pill-gold { background: var(--gold); color: var(--on-accent); border-color: var(--gold-dark); }
+.pill-red { background: var(--redstone); border-color: var(--redstone-dark); }
+
+/* XP bar: <div class="xp-bar" style="--xp:.4"><span class="xp-fill"></span></div> */
+.xp-bar { --xp: 0; height: 20px; background: var(--readout-bg); border: 3px solid var(--panel-edge); overflow: hidden; }
+.xp-fill { display: block; height: 100%; width: calc(var(--xp) * 100%); background: var(--readout-fg);
+  background-image: repeating-linear-gradient(90deg, transparent 0 14px, rgba(0,0,0,.25) 14px 16px); }
+
+/* Stars and hearts are pixel-art made from clip-path; add .off for empty. */
+.stars, .hearts { display: inline-flex; gap: 4px; align-items: center; vertical-align: middle; }
+.star, .heart { display: inline-block; width: 24px; height: 24px; background: var(--gold); flex: none; }
+.star {
+  clip-path: polygon(50% 0, 62% 34%, 100% 38%, 72% 62%, 82% 100%, 50% 78%, 18% 100%, 28% 62%, 0 38%, 38% 34%);
+}
+.heart {
+  background: var(--redstone);
+  clip-path: polygon(0 12%, 12% 0, 38% 0, 50% 12%, 62% 0, 88% 0, 100% 12%, 100% 45%, 50% 100%, 0 45%);
+}
+.star.off, .heart.off { background: var(--stone-dark); opacity: .6; }
+.stars[data-count] , .hearts[data-count] { min-height: 24px; }
+
+/* Depth-level backgrounds (pure CSS). Apply to a screen/card container. */
+.depth-surface, .depth-cave, .depth-deep, .depth-nether, .depth-end { background-size: 32px 32px, 32px 32px, auto; color: #fff; }
+.depth-surface {
+  background-color: #6ec1ff;
+  background-image:
+    linear-gradient(rgba(255,255,255,.18) 50%, transparent 50%),
+    linear-gradient(90deg, rgba(255,255,255,.12) 50%, transparent 50%),
+    linear-gradient(180deg, #6ec1ff 0%, #bfe8ff 55%, var(--grass) 55%, var(--grass-dark) 62%, var(--dirt) 62%, var(--dirt-dark) 100%);
+  color: #10210a; text-shadow: 1px 1px 0 rgba(255,255,255,.6);
+}
+.depth-cave {
+  background-color: #4a4a4a;
+  background-image:
+    linear-gradient(rgba(0,0,0,.18) 50%, transparent 50%),
+    linear-gradient(90deg, rgba(0,0,0,.18) 50%, transparent 50%),
+    linear-gradient(180deg, #6b6b6b, #3a3a3a);
+}
+.depth-deep {
+  background-color: #1f2430;
+  background-image:
+    linear-gradient(rgba(0,0,0,.25) 50%, transparent 50%),
+    linear-gradient(90deg, rgba(0,0,0,.25) 50%, transparent 50%),
+    linear-gradient(180deg, #2a3040, #12151d);
+}
+.depth-nether {
+  background-color: #5a1010;
+  background-image:
+    linear-gradient(rgba(0,0,0,.22) 50%, transparent 50%),
+    linear-gradient(90deg, rgba(0,0,0,.22) 50%, transparent 50%),
+    linear-gradient(180deg, #8d1b1b, #3a0707);
+}
+.depth-end {
+  background-color: #1c0b2e;
+  background-image:
+    linear-gradient(rgba(255,255,255,.06) 50%, transparent 50%),
+    linear-gradient(90deg, rgba(255,255,255,.06) 50%, transparent 50%),
+    linear-gradient(180deg, #2b1448, #0b0414);
+}
+
+/* ---------- Level screen (js/ui/levelScreen.js) ---------- */
+.level-target { font: 400 1.6rem/1.4 var(--font-pixel); margin: 8px 0; color: var(--gold); text-shadow: 3px 3px 0 var(--dirt-dark); overflow-wrap: anywhere; }
+.level-feedback { min-height: 2.5rem; font: 400 1rem/1.6 var(--font-pixel), var(--font-body); color: var(--readout-fg); text-shadow: 2px 2px 0 #000; }
+
+/* ---------- Soroban (js/ui/sorobanWidget.js) ---------- */
 .soroban { display: inline-block; max-width: 100%; }
-.soroban-readout { font: bold 2rem monospace; background: #111; color: #7CFC00; border: 3px solid var(--stone-dark); padding: 4px 12px; margin-bottom: 8px; text-align: right; min-width: 5ch; }
-.soroban-frame { display: flex; justify-content: center; gap: 4px; background: var(--wood); border: 4px solid #3d2a18; padding: 6px 4px; }
+.soroban-readout {
+  font: 400 1.4rem/1.6 var(--font-pixel); background: var(--readout-bg); color: var(--readout-fg);
+  border: var(--px) solid var(--panel-edge); box-shadow: inset 3px 3px 0 #000, 0 0 0 3px var(--stone-dark);
+  padding: 6px 12px; margin: 0 3px 12px; text-align: right; min-width: 5ch; overflow: hidden;
+}
+.soroban-frame {
+  display: flex; justify-content: center; gap: 4px; padding: 8px 6px; max-width: 100%;
+  background-color: var(--wood);
+  background-image: repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 8px, transparent 8px 16px);
+  border: var(--px) solid #2a1a0c;
+  box-shadow: inset 4px 4px 0 rgba(255,255,255,.18), inset -4px -4px 0 rgba(0,0,0,.35), 0 var(--px) 0 #2a1a0c;
+}
 .rod { display: flex; flex-direction: column; align-items: center; width: calc(var(--bead) + 8px); position: relative; }
-.rod::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 6px; margin-left: -3px; background: #3d2a18; }
-.rod-heaven { display: flex; flex-direction: column; height: calc(var(--bead) * 2 + 4px); position: relative; }
-.rod-earth { display: flex; flex-direction: column; height: calc(var(--bead) * 5 + 4px); position: relative; }
-.beam { align-self: stretch; height: 8px; background: #2a1a0c; position: relative; z-index: 1; }
+.rod::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 6px; margin-left: -3px; background: #2a1a0c; box-shadow: inset 2px 0 0 rgba(255,255,255,.15); }
+.rod-heaven { display: flex; flex-direction: column; height: calc(var(--bead) * 2 + 4px); position: relative; justify-content: flex-start; }
+.rod-earth { display: flex; flex-direction: column; height: calc(var(--bead) * 5 + 4px); position: relative; justify-content: flex-start; }
+.beam { align-self: stretch; height: 10px; position: relative; z-index: 1; background: #2a1a0c; box-shadow: inset 0 2px 0 var(--dirt), 0 2px 0 #000; }
 
-.bead { position: relative; z-index: 2; width: var(--bead); height: var(--bead); min-height: 44px; min-width: 44px; padding: 0; margin: 0; border: 3px solid; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-.bead-heaven { background: var(--gold); border-color: var(--gold-dark); }
-.bead-earth { background: var(--stone); border-color: var(--stone-dark); }
+/* Beads are blocks: bevelled square with a highlight and shadow edge. */
+.bead {
+  position: relative; z-index: 2; width: var(--bead); height: var(--bead); min-height: 44px; min-width: 44px; padding: 0; margin: 0;
+  border: 3px solid; border-radius: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  box-shadow: inset 4px 4px 0 rgba(255,255,255,.4), inset -4px -4px 0 rgba(0,0,0,.3);
+  transition: transform .08s steps(2);
+}
+.bead-heaven { background-color: var(--gold); border-color: var(--gold-dark);
+  background-image: linear-gradient(135deg, transparent 0 40%, rgba(255,255,255,.35) 40% 52%, transparent 52%); }
+.bead-earth { background-color: var(--stone); border-color: var(--stone-dark);
+  background-image: radial-gradient(rgba(0,0,0,.18) 22%, transparent 24%), radial-gradient(rgba(255,255,255,.2) 18%, transparent 20%);
+  background-size: 14px 14px, 22px 22px; background-position: 3px 3px, 9px 12px; }
 /* Heaven: inactive at top, active slides down to the beam. */
-.rod-heaven { justify-content: flex-start; }
 .rod-heaven .bead.active { margin-top: auto; }
 /* Earth: active beads stack under the beam, inactive ones sit at the bottom. */
-.rod-earth { justify-content: flex-start; }
 .rod-earth .bead:first-child:not(.active),
 .rod-earth .bead.active + .bead:not(.active) { margin-top: auto; }
-.rod-earth .bead.active { box-shadow: inset 0 0 0 3px rgba(255,255,255,0.35); }
-.bead:focus-visible { outline: 3px solid #fff; outline-offset: 1px; }
+.bead.active { filter: brightness(1.12) saturate(1.2); }
+.rod-earth .bead.active { box-shadow: inset 4px 4px 0 rgba(255,255,255,.4), inset -4px -4px 0 rgba(0,0,0,.3), 0 0 0 2px var(--grass); }
+.bead:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; z-index: 3; }
 
-.soroban-clear { display: block; margin: 12px auto 0; min-width: 120px; min-height: 48px; font: bold 1.1rem system-ui, sans-serif; background: var(--stone); color: #111; border: 3px solid var(--stone-dark); cursor: pointer; touch-action: manipulation; }
-.soroban-clear:active { background: var(--stone-dark); color: #fff; }
+.soroban-clear {
+  display: block; margin: 14px auto 0; min-width: 120px; min-height: var(--tap);
+  font: 400 .8rem/1.4 var(--font-pixel), var(--font-body); background: var(--stone); color: #111;
+  border: var(--px) solid var(--panel-edge); border-radius: 0; cursor: pointer; touch-action: manipulation;
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.45), inset -3px -3px 0 rgba(0,0,0,.3), 0 var(--px) 0 var(--panel-edge);
+}
+.soroban-clear:active { transform: translateY(var(--px)); background: var(--stone-dark); color: #fff; box-shadow: none; }
+
+@media (max-width: 420px) {
+  :root { --bead: 40px; }
+  body { padding-left: 8px; padding-right: 8px; }
+  .soroban-frame { gap: 2px; padding: 6px 3px; }
+  .rod { width: calc(var(--bead) + 6px); }
+  .bead { min-width: 44px; min-height: 44px; width: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
