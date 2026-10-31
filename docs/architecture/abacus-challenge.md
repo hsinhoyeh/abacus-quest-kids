@@ -194,8 +194,10 @@ Pages deploy on `master`.
    S1/S2 merge. *Accept:* reducer tests green; a pack of add/sub problems
    is playable end-to-end. (Story 3)
 6. **S6 — Set-the-number packs.** Pack data for 1-digit → 4-digit. (Story 2)
-7. **S7 — Creeper timer mode.** fuse + speed bonus + time logging, on S5's
-   reducer. (Story 4)
+7. **S7 — Timer challenges (Phase 1).** `core/fuse.js` + widget: Start!
+   3-2-1 kick-off, Creeper fuse, stopwatch, speed bonus, best time. Built
+   against the S0 contracts and plugs into S5's `tick`/`submit` events, so
+   it is parallel to S5, not behind it. (Story 4)
 8. **S8 — Rewards, unlocks, map screen, parent progress screen.** On S4+S5.
    (Story 5 UI)
 9. **S9 — Pixel theme + original art.** Blocks, font, backgrounds; parallel
@@ -205,7 +207,6 @@ Pages deploy on `master`.
 **Dependency graph**: after S0, slices **S1, S2, S3, S4, S5, S9 run in
 parallel** (S5 uses the fake port and stub generator at the seam). Chains
 that remain, each edge real:
-`S0 → S5 → S7` (timer extends the session reducer),
 `S0 → S5 → S8` (rewards read session results; also needs S4),
 `S1 → S6` (levels need the widget). Longest chain: three links.
 S10 depends on all and is the integration gate.
