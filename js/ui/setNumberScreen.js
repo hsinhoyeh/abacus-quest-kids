@@ -34,7 +34,7 @@
 const STRINGS = {
   check: 'Check',
   progress: 'Level {n} of {total}',
-  correct: 'You got it!',
+  correct: 'Correct! Nice placing!',
   retry: 'Almost! Have another look and try again.',
   done: 'All set! Great warm-up!',
 };
@@ -69,7 +69,12 @@ export function mount(opts) {
   feedbackEl.setAttribute('aria-live', 'polite');
   const checkBtn = /** @type {HTMLButtonElement} */ (make('button', 'check', t.check));
   checkBtn.setAttribute('type', 'button');
-  root.replaceChildren(progressEl, targetEl, checkBtn, feedbackEl);
+  // Own element so the next target / message never overwrites the cheer.
+  const ackEl = make('div', 'ack');
+  ackEl.setAttribute('aria-live', 'polite');
+  const ackMsgEl = make('span', 'ack-msg');
+  ackEl.append(ackMsgEl);
+  root.replaceChildren(progressEl, targetEl, ackEl, checkBtn, feedbackEl);
 
   const startMs = now();
   let index = 0;
@@ -81,6 +86,19 @@ export function mount(opts) {
   const feedback = (outcome, text) => {
     feedbackEl.setAttribute('data-outcome', outcome);
     feedbackEl.textContent = text;
+  };
+
+  let popFlip = false;
+  /** Alternate the pop marker so consecutive cheers restart the CSS animation. */
+  const acknowledge = () => {
+    popFlip = !popFlip;
+    ackMsgEl.textContent = t.correct;
+    ackEl.setAttribute('data-outcome', 'correct');
+    for (const el of [ackEl, targetEl]) el.setAttribute('data-pop', popFlip ? 'a' : 'b');
+  };
+  const clearAck = () => {
+    ackMsgEl.textContent = '';
+    ackEl.removeAttribute('data-outcome');
   };
 
   const render = () => {
@@ -107,15 +125,17 @@ export function mount(opts) {
       if (misses === 0) correct += 1;
       misses = 0;
       index += 1;
+      acknowledge();
       if (index >= targets.length) {
         finish();
         return;
       }
-      feedback('correct', t.correct);
+      feedback('', '');
       port.clear();
       render();
     } else {
       misses += 1;
+      clearAck();
       feedback('retry', t.retry);
     }
   });

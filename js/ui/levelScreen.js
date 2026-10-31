@@ -48,7 +48,9 @@ const STRINGS = {
   mine: 'Mine!',
   skip: 'Skip',
   retry: 'Try again',
-  correct: 'Mined! +{xp} XP',
+  correct: 'Correct! +{xp} XP',
+  speed: '\u26A1+{bonus} speed',
+  streak: '{n} in a row!',
   wrong: 'Not quite: it was {target}. -1 heart',
   skipped: 'Skipped',
   timeout: 'Boom! The fuse ran out. -1 heart',
@@ -100,11 +102,18 @@ export function mount(opts) {
   const xpEl = make('div', 'xp');
   const feedbackEl = make('div', 'feedback');
   feedbackEl.setAttribute('aria-live', 'polite');
+  // The correct-answer acknowledgement lives in its own element so the next
+  // problem / next feedback never overwrites it; only a miss or retry clears it.
+  const ackEl = make('div', 'ack');
+  ackEl.setAttribute('aria-live', 'polite');
+  const ackMsgEl = make('span', 'ack-msg');
+  const streakEl = make('span', 'streak');
+  ackEl.append(ackMsgEl, streakEl);
   const mineBtn = /** @type {HTMLButtonElement} */ (make('button', 'mine', t.mine));
   const skipBtn = /** @type {HTMLButtonElement} */ (make('button', 'skip', t.skip));
   const retryBtn = /** @type {HTMLButtonElement} */ (make('button', 'retry', t.retry));
   for (const b of [mineBtn, skipBtn, retryBtn]) b.setAttribute('type', 'button');
-  root.replaceChildren(heartsEl, xpEl, problemEl, mineBtn, skipBtn, feedbackEl, retryBtn);
+  root.replaceChildren(heartsEl, xpEl, problemEl, ackEl, mineBtn, skipBtn, feedbackEl, retryBtn);
 
   /** @type {SessionState} */
   let state = createSession(problems, now(), config);
@@ -134,6 +143,29 @@ export function mount(opts) {
     feedbackEl.textContent = text;
   };
 
+  let popFlip = false;
+  /** Restart the CSS pop on the ack, problem panel and XP counter (alternating name = no reflow trick). */
+  const pop = () => {
+    popFlip = !popFlip;
+    for (const el of [ackEl, problemEl, xpEl]) el.setAttribute('data-pop', popFlip ? 'a' : 'b');
+  };
+
+  /** @param {{ xp: number }} last result of the problem just answered correctly */
+  const acknowledge = (last) => {
+    const bonus = Math.max(0, last.xp - state.config.xpPerCorrect);
+    const base = last.xp - bonus;
+    ackMsgEl.textContent = fill(t.correct, { xp: base }) + (bonus > 0 ? `  ${fill(t.speed, { bonus })}` : '');
+    streakEl.textContent = state.streak >= 3 ? fill(t.streak, { n: state.streak }) : '';
+    ackEl.setAttribute('data-outcome', 'correct');
+    pop();
+  };
+
+  const clearAck = () => {
+    ackMsgEl.textContent = '';
+    streakEl.textContent = '';
+    ackEl.removeAttribute('data-outcome');
+  };
+
   /** @param {import('../types.js').SessionEvent} event */
   const dispatch = (event) => {
     const prev = state;
@@ -142,10 +174,15 @@ export function mount(opts) {
     const last = state.results[state.results.length - 1];
     const solved = prev.problems[prev.index];
     if (last && solved) {
-      if (last.outcome === 'correct') feedback('correct', fill(t.correct, { xp: last.xp }));
-      else if (last.outcome === 'wrong') feedback('wrong', fill(t.wrong, { target: solved.target }));
-      else if (last.outcome === 'skip') feedback('skip', t.skipped);
-      else feedback('timeout', t.timeout);
+      if (last.outcome === 'correct') {
+        feedback('', '');
+        acknowledge(last);
+      } else {
+        clearAck();
+        if (last.outcome === 'wrong') feedback('wrong', fill(t.wrong, { target: solved.target }));
+        else if (last.outcome === 'skip') feedback('skip', t.skipped);
+        else feedback('timeout', t.timeout);
+      }
     }
     if (state.status === 'over') feedback('over', t.over);
     if (state.status === 'done') feedback('done', t.done);
@@ -172,6 +209,7 @@ export function mount(opts) {
     state = createSession(problems, now(), config);
     reported = false;
     feedback('', '');
+    clearAck();
     showProblem();
     render();
   });

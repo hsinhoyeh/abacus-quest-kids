@@ -2,6 +2,7 @@
    Original CSS art only. No Mojang/Microsoft assets. Unaffiliated.
    Font: Press Start 2P (SIL OFL 1.1), self-hosted in fonts/. */
 @import url("fuse.css");
+@import url("feedback.css"); /* must stay with the other @imports: an @import after any rule is ignored */
 
 @font-face {
   font-family: "Press Start 2P";

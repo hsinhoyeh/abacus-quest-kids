@@ -107,6 +107,7 @@ test('happy path: player, set-the-number, add/sub, results, reload keeps progres
       await setValue(page, target);
       if (i === 1) await shot(page, '05-set-target-placed');
       await page.getByRole('button', { name: 'Check' }).click();
+      if (i < total) await expect(page.locator('[data-role="ack-msg"]')).toHaveText('Correct! Nice placing!');
     }
   });
 
@@ -148,7 +149,13 @@ test('happy path: player, set-the-number, add/sub, results, reload keeps progres
       await page.getByRole('button', { name: 'Mine!' }).click();
       if (i < 9) {
         await expect(xp).not.toHaveText(`XP ${xpBefore}`);
-        await expect(page.locator('[data-role="feedback"]')).toHaveText(/^Mined! \+\d+ XP$/);
+        // #25: a correct answer is acknowledged, in its own element, and it
+        // stays while the next problem is already on screen.
+        await expect(page.locator('[data-role="ack"]')).toHaveAttribute('data-outcome', 'correct');
+        await expect(page.locator('[data-role="ack-msg"]')).toHaveText(/^Correct! \+10 XP( {2}\u26A1\+\d+ speed)?$/);
+        if (i === 2) await expect(page.locator('[data-role="streak"]')).toHaveText('3 in a row!');
+        await expect(page.locator('[data-role="problem"]')).toHaveText(/^[+-] \d$/);
+        if (i === 0) await shot(page, '10b-addsub-correct-ack');
       }
     }
   });

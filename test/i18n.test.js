@@ -24,7 +24,7 @@ test('zh-TW strings are Chinese (a key left in English would fail here)', () => 
 test('translate fills {placeholders}', () => {
   assert.equal(translate('en', 'nav.player', { name: 'Kai' }), 'Player: Kai');
   assert.equal(translate('zh-TW', 'nav.player', { name: 'Kai' }), '玩家：Kai');
-  assert.equal(translate('en', 'level.correct', { xp: 12 }), 'Mined! +12 XP');
+  assert.equal(translate('en', 'level.correct', { xp: 12 }), 'Correct! +12 XP');
   assert.equal(translate('en', 'map.requirement', { stars: 4, depth: 'Surface' }), 'Earn 4 stars in Surface to unlock');
 });
 
@@ -90,4 +90,20 @@ test('screenStrings: raw templates reach every screen, depths and pack titles in
   assert.equal(s.play.fuse['start'], '開始！');
   assert.equal(s.result['retry'], '再試一次');
   assert.equal(s.parent['title'], '{player} 的學習紀錄');
+});
+
+test('correct-answer acknowledgement strings exist in both languages with the same placeholders', () => {
+  for (const k of ['level.correct', 'level.speed', 'level.streak', 'set.correct']) {
+    assert.ok(EN[k] && ZH_TW[k], k);
+  }
+  assert.equal(translate('en', 'level.speed', { bonus: 5 }), '\u26A1+5 speed');
+  assert.equal(translate('en', 'level.streak', { n: 3 }), '3 in a row!');
+  assert.equal(translate('zh-TW', 'set.correct').startsWith('答對了！'), true);
+  assert.equal(translate('zh-TW', 'level.streak', { n: 3 }), '連續答對 3 題！');
+});
+
+test('screenStrings hands the acknowledgement strings to the level and set screens', () => {
+  const s = screenStrings((k) => translate('en', k));
+  for (const k of ['correct', 'speed', 'streak']) assert.ok(s.play.level[k], k);
+  assert.ok(s.play.set.correct);
 });

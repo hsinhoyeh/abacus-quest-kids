@@ -1,0 +1,41 @@
+/* Correct-answer acknowledgement (#25). The ack lives in its own element
+   ([data-role="ack"]) so the next problem never overwrites it; it pops in,
+   holds ~1 s, then fades while its text stays until the next feedback.
+   The pop marker (data-pop="a"|"b") alternates so every correct restarts it. */
+.level-ack, .set-ack {
+  /* Shares the grid cell of the feedback line (feedback and ack are never both
+     filled), so no grid-template-areas change is needed. */
+  grid-area: feedback; justify-self: stretch; text-align: center;
+  min-height: 2.5rem; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font: 400 .8rem/1.5 var(--font-pixel), var(--font-body); color: var(--readout-fg); text-shadow: 2px 2px 0 #000;
+  overflow-wrap: anywhere;
+}
+.level-streak { color: var(--gold); }
+.level-streak:empty, .level-ack-msg:empty, .set-ack-msg:empty { display: none; }
+.level-ack[data-outcome="correct"], .set-ack[data-outcome="correct"] {
+  padding: 4px 10px; border: 3px solid var(--grass-dark); background: rgba(95, 168, 58, .22);
+}
+@media (prefers-color-scheme: light) {
+  .level-ack, .set-ack { color: #1b5e20; text-shadow: none; }
+  .level-streak { color: #7a4b00; }
+}
+
+@keyframes ack-pop-a { 0% { transform: scale(.6); opacity: 0; } 15% { transform: scale(1.12); opacity: 1; } 28% { transform: scale(1); } 85% { opacity: 1; } 100% { opacity: .15; } }
+@keyframes ack-pop-b { 0% { transform: scale(.6); opacity: 0; } 15% { transform: scale(1.12); opacity: 1; } 28% { transform: scale(1); } 85% { opacity: 1; } 100% { opacity: .15; } }
+@keyframes ok-flash-a { 0%, 100% { box-shadow: none; } 20% { box-shadow: 0 0 0 4px var(--grass); background-color: rgba(95, 168, 58, .35); transform: scale(1.06); } }
+@keyframes ok-flash-b { 0%, 100% { box-shadow: none; } 20% { box-shadow: 0 0 0 4px var(--grass); background-color: rgba(95, 168, 58, .35); transform: scale(1.06); } }
+@keyframes xp-bump-a { 0% { transform: scale(1); } 30% { transform: scale(1.3); color: var(--gold); } 100% { transform: scale(1); } }
+@keyframes xp-bump-b { 0% { transform: scale(1); } 30% { transform: scale(1.3); color: var(--gold); } 100% { transform: scale(1); } }
+
+.level-ack[data-pop="a"], .set-ack[data-pop="a"] { animation: ack-pop-a 1.2s ease-out forwards; }
+.level-ack[data-pop="b"], .set-ack[data-pop="b"] { animation: ack-pop-b 1.2s ease-out forwards; }
+.level-problem[data-pop="a"], .set-target[data-pop="a"] { animation: ok-flash-a .6s ease-out; }
+.level-problem[data-pop="b"], .set-target[data-pop="b"] { animation: ok-flash-b .6s ease-out; }
+.level-xp[data-pop="a"] { display: inline-block; animation: xp-bump-a .5s ease-out; }
+.level-xp[data-pop="b"] { display: inline-block; animation: xp-bump-b .5s ease-out; }
+
+/* No motion: keep the text, drop the animation (opacity stays at 1). */
+@media (prefers-reduced-motion: reduce) {
+  .level-ack, .set-ack, .level-problem, .set-target, .level-xp { animation: none !important; transition: none !important; }
+}
+:root:lang(zh-TW) .level-ack, :root:lang(zh-TW) .set-ack { font-size: 1rem; line-height: 1.8; }
