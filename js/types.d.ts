@@ -82,3 +82,37 @@ export interface State {
   currentPlayer: string | null;
   players: Record<string, PlayerState>;
 }
+
+// --- Timer challenges (core/fuse.js) ---
+
+export type FusePhase = 'idle' | 'kickoff' | 'running' | 'paused' | 'expired' | 'stopped';
+
+export type FuseEvent =
+  | { type: 'kickoff'; count: number }
+  | { type: 'go' }
+  | { type: 'expire'; elapsedMs: number };
+
+export interface FuseSnapshot {
+  phase: FusePhase;
+  /** 3, 2, 1 during kick-off, else 0. */
+  count: number;
+  /** Stopwatch: total running time (excludes kick-off and pauses). */
+  elapsedMs: number;
+  /** Time spent on the current problem's fuse. */
+  problemMs: number;
+  fuseMs: number;
+  remainingMs: number;
+  /** remainingMs / fuseMs, 1 = full fuse, 0 = boom. */
+  fraction: number;
+}
+
+export interface FuseOptions {
+  clock: () => number;
+  /** Per-problem fuse length (from Pack.fuseMs or defaultFuseMs). */
+  fuseMs: number;
+  /** Test hook; defaults to 1000. */
+  kickoffStepMs?: number;
+  onEvent?: (e: FuseEvent) => void;
+  /** Fires exactly once per armed fuse; the caller dispatches a timeout. */
+  onExpire?: () => void;
+}
