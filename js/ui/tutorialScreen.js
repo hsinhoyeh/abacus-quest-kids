@@ -39,15 +39,22 @@
 
 /** English defaults. Every key this screen reads is here; i18n supplies the same keys. */
 export const FALLBACK_STRINGS = {
-  // Step rules (params: n = digit moved, c = complement, {place} is filled in by the screen)
-  'tut.direct.add': 'Add {n} on the {place} rod.',
-  'tut.direct.remove': 'Take away {n} on the {place} rod.',
-  'tut.c5.add': 'There are not enough lower beads. Add 5 on the {place} rod, then take away {c}.',
-  'tut.c5.remove': 'Take away 5 on the {place} rod, then add back {c}.',
-  'tut.carry.add': 'Too big for this rod! Add 1 on the {place} rod. That is 10.',
-  'tut.carry.take': 'Now take away {c} on the {place} rod, because 10 is {c} too many.',
-  'tut.borrow.take': 'Not enough here to take away {n}. Borrow! Take 1 from the {place} rod. It is worth 10.',
-  'tut.borrow.add': 'Now add {c} on the {place} rod: 10 take away {n} leaves {c}.',
+  // Step rules (keys from core/explain.js KEYS). Params from the plan: digit, amount,
+  // complement, fromRod, toRod, rod, place; the screen adds {place}, {fromPlace}, {toPlace} as words.
+  'tut.direct.add': 'Add {digit} on the {place} rod.',
+  'tut.direct.remove': 'Take away {digit} on the {place} rod.',
+  'tut.c5.add': 'Not enough lower beads. On the {place} rod add 5, then take away {complement}.',
+  'tut.c5.remove': 'On the {place} rod take away 5, then add back {complement}.',
+  'tut.carry.remove': '{digit} is too big for the {place} rod. Take away {amount} here first.',
+  'tut.carry.remove.c5': '{digit} is too big for the {place} rod. Take away {amount} here first, using the 5 bead.',
+  'tut.carry.ripple': 'The {place} rod is full. Clear it back to 0 and carry on to the left.',
+  'tut.carry.add': 'Now add 1 on the {place} rod. That is the 10 we carried!',
+  'tut.carry.add.c5': 'Now add 1 on the {place} rod, using the 5 bead. That is the 10 we carried!',
+  'tut.borrow.take': 'Not enough on the {toPlace} rod to take away {digit}. Borrow! Take 1 from the {place} rod. It is worth 10.',
+  'tut.borrow.take.c5': 'Not enough on the {toPlace} rod to take away {digit}. Borrow! Take 1 from the {place} rod, using the 5 bead.',
+  'tut.borrow.nine': 'The {place} rod was empty, so make it 9 as the borrowed 10 passes through.',
+  'tut.borrow.add': 'Now add {amount} on the {place} rod: 10 take away {digit} leaves {amount}.',
+  'tut.borrow.add.c5': 'Now add {amount} on the {place} rod, using the 5 bead: 10 take away {digit} leaves {amount}.',
   // Place names for {place}
   'tut.place.ones': 'ones',
   'tut.place.tens': 'tens',
@@ -172,11 +179,21 @@ export function mount(opts) {
     cancelTimer = null;
   }
 
+  /** Place name of a rod index (0 = leftmost). @param {number} rod */
+  function placeName(rod) {
+    const name = PLACES[rodCount - 1 - rod];
+    return name ? t(`tut.place.${name}`) : `10^${rodCount - 1 - rod}`;
+  }
+
   /** @param {Step} step */
   function ruleText(step) {
-    const name = PLACES[rodCount - 1 - step.rod];
-    const place = name ? t(`tut.place.${name}`) : `10^${rodCount - 1 - step.rod}`;
-    return t(step.key, { ...step.params, place });
+    const p = step.params;
+    return t(step.key, {
+      ...p,
+      place: placeName(step.rod),
+      fromPlace: placeName(p['fromRod'] ?? step.rod),
+      toPlace: placeName(p['toRod'] ?? step.rod),
+    });
   }
 
   function render() {

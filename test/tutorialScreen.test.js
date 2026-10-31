@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { mount } from '../js/ui/tutorialScreen.js';
 import { createFakeSorobanPort, createFakeScheduler } from './fakes.js';
 import { createRoot, byRole } from './domStub.js';
+import { explain } from '../js/core/explain.js';
+import { KEYS } from '../js/core/explain.js';
+import { FALLBACK_STRINGS } from '../js/ui/tutorialScreen.js';
 import { allByRole } from './helpers.screens.js';
 
 /** @typedef {import('../js/types.js').Step} Step */
@@ -10,17 +13,17 @@ import { allByRole } from './helpers.screens.js';
 // Hand-written fixtures (explain() is slice #32). Two rods: rod 0 = tens, rod 1 = ones.
 /** @type {Step[]} 12 - 5 = 7: borrow */
 const BORROW = [
-  { rod: 0, kind: 'borrow', moves: [{ rod: 0, bead: 'earth', index: 1, dir: 'away' }], before: 12, after: 2, key: 'tut.borrow.take', params: { n: 5 } },
-  { rod: 1, kind: 'borrow', moves: [{ rod: 1, bead: 'heaven', dir: 'toBeam' }], before: 2, after: 7, key: 'tut.borrow.add', params: { n: 5, c: 5 } },
+  { rod: 0, kind: 'borrow', moves: [{ rod: 0, bead: 'earth', index: 1, dir: 'away' }], before: 12, after: 2, key: 'tut.borrow.take', params: { digit: 5, toRod: 1 } },
+  { rod: 1, kind: 'borrow', moves: [{ rod: 1, bead: 'heaven', dir: 'toBeam' }], before: 2, after: 7, key: 'tut.borrow.add', params: { digit: 5, amount: 5 } },
 ];
-/** @type {Step[]} 7 + 5 = 12: carry */
+/** @type {Step[]} 7 + 5 = 12: carry (shape of explain() output) */
 const CARRY = [
-  { rod: 0, kind: 'carry', moves: [{ rod: 0, bead: 'earth', index: 1, dir: 'toBeam' }], before: 7, after: 17, key: 'tut.carry.add', params: { n: 5, c: 5 } },
-  { rod: 1, kind: 'carry', moves: [{ rod: 1, bead: 'heaven', dir: 'away' }], before: 17, after: 12, key: 'tut.carry.take', params: { n: 5, c: 5 } },
+  { rod: 1, kind: 'carry', moves: [{ rod: 1, bead: 'heaven', dir: 'away' }], before: 7, after: 2, key: 'tut.carry.remove', params: { digit: 5, amount: 5 } },
+  { rod: 0, kind: 'carry', moves: [{ rod: 0, bead: 'earth', index: 1, dir: 'toBeam' }], before: 2, after: 12, key: 'tut.carry.add', params: { amount: 1, fromRod: 1 } },
 ];
 /** @type {Step[]} 0 + 7: one step with two moves (heaven + two earth) */
 const SEVEN = [
-  { rod: 1, kind: 'direct', moves: [{ rod: 1, bead: 'heaven', dir: 'toBeam' }, { rod: 1, bead: 'earth', index: 2, dir: 'toBeam' }], before: 0, after: 7, key: 'tut.direct.add', params: { n: 7 } },
+  { rod: 1, kind: 'direct', moves: [{ rod: 1, bead: 'heaven', dir: 'toBeam' }, { rod: 1, bead: 'earth', index: 2, dir: 'toBeam' }], before: 0, after: 7, key: 'tut.direct.add', params: { digit: 7 } },
 ];
 
 /** @param {Step[]} plan @param {Record<string, any>} [extra] */
@@ -108,11 +111,12 @@ test('carry fixture plays in order too', () => {
   const t = setup(CARRY);
   assert.equal(t.port.getValue(), 7);
   t.scheduler.run();
-  assert.equal(t.port.getValue(), 17);
+  assert.equal(t.port.getValue(), 2);
   t.btn('next').click();
+  assert.deepEqual(t.port.highlighted, CARRY[1]?.moves);
   t.scheduler.run();
   assert.equal(t.port.getValue(), 12);
-  assert.ok(/Add|add|10/.test(t.text()));
+  assert.ok(/add 1/.test(t.text()));
 });
 
 test('strings override the fallback table and params are templated by the injected t', () => {
@@ -122,7 +126,7 @@ test('strings override the fallback table and params are templated by the inject
   const calls = [];
   const t2 = setup(BORROW, { t: (/** @type {string} */ k, /** @type {any} */ p) => (calls.push([k, p]), `<${k}>`) });
   assert.equal(t2.text(), '<tut.borrow.take>');
-  assert.equal(calls.find((c) => c[0] === 'tut.borrow.take')?.[1].n, 5);
+  assert.equal(calls.find((c) => c[0] === 'tut.borrow.take')?.[1].digit, 5);
 });
 
 test('try: Your turn resets the rods to the plan start and waits for the kid', () => {
@@ -250,4 +254,29 @@ test('all buttons are real <button type=button> elements', () => {
 
 test('an empty plan is rejected', () => {
   assert.throws(() => setup([]));
+});
+
+test('fallback table covers every key explain() can produce', () => {
+  for (const k of KEYS) assert.ok(FALLBACK_STRINGS[/** @type {keyof typeof FALLBACK_STRINGS} */ (k)], k);
+});
+
+test('real explain() plans play and complete in Your turn with no unfilled text (incl. borrow chains)', () => {
+  for (const [start, op, operand] of /** @type {const} */ ([[12, '-', 5], [7, '+', 5], [100, '-', 7], [99, '+', 1], [3, '+', 4], [21, '-', 8]])) {
+    const plan = explain({ start, op, operand, rods: 3 });
+    const root = createRoot();
+    const port = createFakeSorobanPort(3);
+    const scheduler = createFakeScheduler();
+    /** @type {any[]} */
+    const done = [];
+    mount({ root: /** @type {any} */ (root), port, plan, scheduler, onDone: (s) => done.push(s) });
+    for (let i = 0; i < plan.length; i++) {
+      const txt = byRole(root, 'text').textContent;
+      assert.ok(txt.length > 5 && !txt.includes('{'), `${start}${op}${operand} step ${i}: ${txt}`);
+      if (i < plan.length - 1) byRole(root, 'next').click();
+    }
+    byRole(root, 'yourturn').click();
+    for (const s of plan) port.setValue(s.after);
+    assert.equal(done.length, 1, `${start}${op}${operand}`);
+    assert.equal(port.getValue(), op === '+' ? start + operand : start - operand);
+  }
 });
