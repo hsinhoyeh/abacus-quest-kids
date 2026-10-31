@@ -1,0 +1,16 @@
+{
+  "name": "abacus-quest-kids",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Minecraft-inspired soroban practice game for kids (zero-build static site)",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}
