@@ -13,7 +13,7 @@ import { tapEarth, tapHeaven, value, fromNumber } from '../core/soroban.js';
 
 /**
  * @param {Document} doc
- * @param {{ rods?: number, clearLabel?: string, heavenLabel?: string, earthLabel?: string }} [opts] earthLabel may contain {k}
+ * @param {{ rods?: number, clearLabel?: string, heavenLabel?: string, earthLabel?: string, placeLabels?: string[] }} [opts] earthLabel may contain {k}; placeLabels are ones-first (ones, tens, hundreds...) and add a caption under each rod
  * @returns {SorobanWidget}
  */
 export function createSorobanWidget(doc, opts = {}) {
@@ -66,6 +66,12 @@ export function createSorobanWidget(doc, opts = {}) {
     }
     beads.push(row);
     rodEl.append(heavenZone, beam, earthZone);
+    const place = opts.placeLabels?.[rodCount - 1 - i];
+    if (place) {
+      const cap = el('div', 'rod-label');
+      cap.textContent = place;
+      rodEl.append(cap);
+    }
     frame.append(rodEl);
   });
   root.append(readout, frame, clear);
@@ -78,6 +84,25 @@ export function createSorobanWidget(doc, opts = {}) {
       for (let k = 1; k <= 4; k++) row[k]?.classList.toggle('active', k <= r.earth);
     });
     readout.textContent = String(value(rods));
+  }
+
+  /** @type {HTMLElement[]} */
+  let lit = [];
+
+  /**
+   * The bead a move touches. Earth `index` is 1-based (nearest the beam = 1);
+   * without it, the bead a kid would tap: the first one still away (toBeam)
+   * or the last one already up (away).
+   * @param {import('../types.js').BeadMove} m
+   * @returns {HTMLElement | undefined}
+   */
+  function beadFor(m) {
+    const row = beads[m.rod];
+    const r = rods[m.rod];
+    if (!row || !r) return undefined;
+    if (m.bead === 'heaven') return row[0];
+    const k = m.index ?? (m.dir === 'toBeam' ? r.earth + 1 : r.earth);
+    return row[k];
   }
 
   function notify() {
@@ -112,6 +137,26 @@ export function createSorobanWidget(doc, opts = {}) {
       rods = fromNumber(0, rodCount);
       render();
       notify();
+    },
+    rodValues: () => rods.map((r) => 5 * r.heaven + r.earth),
+    highlight(moves) {
+      port.clearHighlight?.();
+      for (const m of moves) {
+        const b = beadFor(m);
+        if (!b) continue;
+        // Arrow: heaven moves down to the beam, earth moves up to it.
+        const down = (m.bead === 'heaven') === (m.dir === 'toBeam');
+        b.classList.add('hint', m.dir === 'toBeam' ? 'hint-toBeam' : 'hint-away');
+        b.setAttribute('data-hint', down ? 'down' : 'up');
+        lit.push(b);
+      }
+    },
+    clearHighlight() {
+      for (const b of lit) {
+        b.classList.remove('hint', 'hint-toBeam', 'hint-away');
+        b.removeAttribute('data-hint');
+      }
+      lit = [];
     },
     onChange(cb) {
       listeners.add(cb);

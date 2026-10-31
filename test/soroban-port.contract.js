@@ -52,4 +52,41 @@ export function runSorobanPortContract(label, make) {
     assert.throws(() => p.setValue(1.5));
     assert.equal(p.getValue(), 99);
   });
+
+  test(`${label}: rodValues gives one digit per rod, leftmost first`, () => {
+    const p = make(5);
+    assert.ok(p.rodValues);
+    assert.deepEqual(p.rodValues(), [0, 0, 0, 0, 0]);
+    p.setValue(1203);
+    assert.deepEqual(p.rodValues(), [0, 1, 2, 0, 3]);
+    p.setValue(98765);
+    assert.deepEqual(p.rodValues(), [9, 8, 7, 6, 5]);
+    const small = make(2);
+    small.setValue(47);
+    assert.deepEqual(small.rodValues?.(), [4, 7]);
+  });
+
+  test(`${label}: highlight/clearHighlight never change value or notify`, () => {
+    const p = make(3);
+    assert.ok(p.highlight && p.clearHighlight);
+    p.setValue(12);
+    /** @type {number[]} */
+    const seen = [];
+    p.onChange((v) => seen.push(v));
+    p.highlight([
+      { rod: 0, bead: 'earth', index: 1, dir: 'away' },
+      { rod: 2, bead: 'heaven', dir: 'toBeam' },
+    ]);
+    p.highlight([{ rod: 1, bead: 'earth', dir: 'toBeam' }]); // replaces
+    p.clearHighlight();
+    p.clearHighlight(); // idempotent
+    assert.equal(p.getValue(), 12);
+    assert.deepEqual(seen, []);
+  });
+
+  test(`${label}: highlight ignores moves for rods that do not exist`, () => {
+    const p = make(2);
+    p.highlight?.([{ rod: 7, bead: 'heaven', dir: 'toBeam' }, { rod: -1, bead: 'earth', index: 9, dir: 'away' }]);
+    assert.equal(p.getValue(), 0);
+  });
 }

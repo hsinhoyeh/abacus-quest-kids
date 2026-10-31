@@ -50,6 +50,12 @@ export interface SorobanPort {
   clear(): void;
   /** Subscribe to value changes; returns an unsubscribe function. */
   onChange(cb: (value: number) => void): () => void;
+  /** Tutorial (additive, optional): mark the beads these moves touch. Replaces any previous highlight. */
+  highlight?(moves: BeadMove[]): void;
+  /** Tutorial (additive, optional): remove every highlight. */
+  clearHighlight?(): void;
+  /** Tutorial (additive, optional): digit value (0..9) per rod, leftmost rod first. */
+  rodValues?(): number[];
 }
 
 /** String key/value storage (localStorage in the browser, a Map in tests). */
