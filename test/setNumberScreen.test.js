@@ -83,7 +83,7 @@ test('unlimited retries; finishing calls onDone once with first-try correct, tot
   advance(6_000);
   el('check').click(); // level 3 after 2 misses
   assert.deepEqual(done, [{ correct: 1, total: 3, ms: 10_000 }]);
-  assert.equal(el('feedback').getAttribute('data-outcome'), 'done');
+  assert.equal(el('feedback').textContent, ''); // no stale retry text next to the final ack
   assert.equal(el('check').disabled, true);
   el('check').click();
   assert.equal(done.length, 1);
@@ -129,10 +129,10 @@ test('wrong placements show no acknowledgement and clear an earlier one', () => 
   assert.equal(el('ack').getAttribute('data-outcome'), null);
 });
 
-test('the last correct placement is acknowledged too, next to the done message', () => {
+test('the last correct placement is acknowledged too, alone (no done line overlapping it)', () => {
   const { el, port } = setup([7]);
   port.setValue(7);
   el('check').click();
   assert.equal(el('ack-msg').textContent, 'Correct! Nice placing!');
-  assert.equal(el('feedback').getAttribute('data-outcome'), 'done');
+  assert.equal(el('feedback').textContent, '');
 });

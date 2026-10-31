@@ -113,7 +113,7 @@ export function mount(opts) {
 
   const finish = () => {
     done = true;
-    feedback('done', t.done);
+    if (targets.length === 0) feedback('done', t.done); // else the final ack stands alone
     render();
     onDone({ correct, total: targets.length, ms: now() - startMs });
   };
@@ -126,11 +126,11 @@ export function mount(opts) {
       misses = 0;
       index += 1;
       acknowledge();
+      feedback('', '');
       if (index >= targets.length) {
         finish();
         return;
       }
-      feedback('', '');
       port.clear();
       render();
     } else {

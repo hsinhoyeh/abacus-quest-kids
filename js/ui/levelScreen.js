@@ -185,7 +185,8 @@ export function mount(opts) {
       }
     }
     if (state.status === 'over') feedback('over', t.over);
-    if (state.status === 'done') feedback('done', t.done);
+    // A correct final answer keeps the ack alone on screen (feedback shares its cell).
+    if (state.status === 'done' && last?.outcome !== 'correct') feedback('done', t.done);
     showProblem();
     render();
     if (state.status === 'done' && !reported) {

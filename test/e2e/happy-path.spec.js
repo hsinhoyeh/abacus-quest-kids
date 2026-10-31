@@ -267,13 +267,14 @@ test('last correct answer: ack stays ~1 s, then the result (add/sub)', async ({ 
   await expect(page.locator('[data-role="streak"]')).toHaveText('10 in a row!');
   await expect(page.locator('[data-role="mine"]')).toBeDisabled();
   await expect(resultShown(page)).toHaveCount(0);
+  await shot(page, '17-addsub-last-ack');
   await page.clock.runFor(900);
   await expect(resultShown(page)).toHaveCount(0);
   await expect(page.locator('[data-role="ack-msg"]')).toHaveText(/^Correct!/);
   await page.clock.runFor(200);
   await expect(resultShown(page)).toBeVisible();
   await expect(page.locator('.result-stars')).toHaveAttribute('data-stars', '3');
-  await shot(page, '17-addsub-last-ack-then-result');
+  await shot(page, '17b-addsub-last-ack-then-result');
 });
 
 test('last correct placement: ack stays ~1 s, then the result (set-the-number)', async ({ page }) => {

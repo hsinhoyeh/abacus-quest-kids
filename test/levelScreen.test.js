@@ -249,5 +249,6 @@ test('the acknowledgement survives the last problem (done) and strings are overr
   port.setValue(9);
   byRole(root, 'mine').click();
   assert.ok(byRole(root, 'ack-msg').textContent.startsWith('答對了！+10 經驗'));
-  assert.equal(byRole(root, 'feedback').getAttribute('data-outcome'), 'done');
+  // #28: the final ack stands alone; the result screen announces the clear.
+  assert.equal(byRole(root, 'feedback').textContent, '');
 });
