@@ -25,20 +25,28 @@ export function viewModel(s) {
   };
 }
 
+// English defaults; i18n passes translated strings in.
+const STRINGS = {
+  start: 'Start!',
+  elapsed: 'elapsed time',
+  record: 'New record!',
+};
+
 /**
  * @param {HTMLElement} root
- * @param {{onStart: () => void}} opts
+ * @param {{onStart: () => void, strings?: Partial<typeof STRINGS>}} opts
  */
 export function createFuseWidget(root, opts) {
+  const t = { ...STRINGS, ...opts.strings };
   root.classList.add('fuse');
   root.innerHTML =
-    '<button type="button" class="fuse__start">Start!</button>' +
+    '<button type="button" class="fuse__start"></button>' +
     '<div class="fuse__count" aria-live="assertive"></div>' +
     '<div class="fuse__track" hidden><span class="fuse__creeper" aria-hidden="true">\u{1F7E9}</span>' +
     '<div class="fuse__bar"><div class="fuse__burn"></div></div>' +
     '<span class="fuse__secs"></span></div>' +
-    '<div class="fuse__elapsed" aria-label="elapsed time">0:00.0</div>' +
-    '<div class="fuse__record" role="status" hidden>New record!</div>';
+    '<div class="fuse__elapsed">0:00.0</div>' +
+    '<div class="fuse__record" role="status" hidden></div>';
   /** @param {string} sel @returns {HTMLElement} */
   const q = (sel) => {
     const el = root.querySelector(sel);
@@ -51,6 +59,9 @@ export function createFuseWidget(root, opts) {
   const secs = q('.fuse__secs');
   const elapsed = q('.fuse__elapsed');
   const record = q('.fuse__record');
+  start.textContent = t.start;
+  elapsed.setAttribute('aria-label', t.elapsed);
+  record.textContent = t.record;
   start.addEventListener('click', () => opts.onStart());
 
   return {

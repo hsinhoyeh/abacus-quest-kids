@@ -14,5 +14,5 @@ export default {
   count: 8,
   seed: 62,
   starRules: { two: 0.7, three: 0.9 },
-  unlockRequires: { packId: 'set-1', stars: 6 },
+  unlockRequires: { packId: 'set-1', stars: 4 },
 };

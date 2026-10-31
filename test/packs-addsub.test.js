@@ -49,7 +49,7 @@ test('ids unique, depth increasing, each unlock requires the previous pack', () 
     const prev = /** @type {Pack} */ (packs[i - 1]);
     const cur = /** @type {Pack} */ (packs[i]);
     assert.ok(cur.depth > prev.depth, `${cur.id} deeper`);
-    assert.deepEqual(cur.unlockRequires, { packId: prev.id, stars: 6 });
+    assert.deepEqual(cur.unlockRequires, { packId: prev.id, stars: 4 });
   }
   assert.equal(packs[0]?.unlockRequires.stars, 0, 'first pack is open');
 });

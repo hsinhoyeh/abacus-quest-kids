@@ -12,15 +12,18 @@ site, no accounts, progress stays in your browser.
 
 ## Develop
 
-Requires Node >= 22. No runtime dependencies; `typescript` is the only dev
-dependency (type-checks the JSDoc-typed ES modules).
+Requires Node >= 22. No runtime dependencies. Dev dependencies: `typescript` (type-checks the
+JSDoc-typed ES modules) and `@playwright/test` (e2e lane).
 
 ```sh
 npm ci
 npm run typecheck   # tsc --noEmit, strict + checkJs
-npm test            # node --test
-python3 -m http.server   # serve the static site locally
+npm test            # node --test (unit)
+npm run e2e         # Playwright happy path at 390x844 (once: npx playwright install chromium)
+node scripts/serve.mjs   # serve the static site on http://127.0.0.1:4173/
 ```
+
+The e2e run writes a full-page screenshot per step to [docs/e2e/screenshots/](docs/e2e/screenshots/).
 
 ## Art & fonts
 
