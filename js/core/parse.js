@@ -7,6 +7,8 @@
 /** @typedef {import('../types.js').PlayLogEntry} PlayLogEntry */
 /** @typedef {import('../types.js').StepKind} StepKind */
 /** @typedef {import('../types.js').Lang} Lang */
+/** @typedef {import('../types.js').Lesson} Lesson */
+/** @typedef {import('../types.js').LessonProblem} LessonProblem */
 
 export const STORAGE_KEY = 'aqk.v1';
 
@@ -101,6 +103,63 @@ export function parsePack(input) {
   return pack;
 }
 
+/** @type {readonly import('../types.js').PlanStepKind[]} */
+const PLAN_KINDS = ['direct', 'complement5', 'carry', 'borrow'];
+const MAX_LESSON_RODS = 5;
+
+/**
+ * @param {unknown} v
+ * @param {number} rods
+ * @returns {LessonProblem | null} null when the shape is wrong or a value does not fit on the rods
+ */
+function parseLessonProblem(v, rods) {
+  if (!isRecord(v)) return null;
+  const { start, op, operand } = v;
+  if (typeof start !== 'number' || !Number.isInteger(start) || start < 0) return null;
+  if (typeof operand !== 'number' || !Number.isInteger(operand) || operand < 1) return null;
+  if (op !== '+' && op !== '-') return null;
+  const result = op === '+' ? start + operand : start - operand;
+  const limit = 10 ** rods;
+  if (start >= limit || operand >= limit || result < 0 || result >= limit) return null;
+  return { start, op, operand };
+}
+
+/**
+ * Validate an unknown value as a Lesson v1: ids and keys, a worked example
+ * and exactly three practice problems that all fit on the example's rods
+ * (no negative result, no overflow).
+ * @param {unknown} input
+ * @returns {Lesson | Error}
+ */
+export function parseLesson(input) {
+  if (!isRecord(input)) return new Error('lesson: not an object');
+  if (input['schemaVersion'] !== 1) return new Error('lesson: schemaVersion must be 1');
+  const { id, titleKey, kind, example, practice } = input;
+  if (typeof id !== 'string' || id === '') return new Error('lesson: id');
+  if (typeof titleKey !== 'string' || titleKey === '') return new Error('lesson: titleKey');
+  const k = PLAN_KINDS.find((x) => x === kind);
+  if (k === undefined) return new Error('lesson: kind');
+  if (!isRecord(example)) return new Error('lesson: example');
+  const rods = example['rods'];
+  if (typeof rods !== 'number' || !Number.isInteger(rods) || rods < 1 || rods > MAX_LESSON_RODS) {
+    return new Error('lesson: example.rods');
+  }
+  const ex = parseLessonProblem(example, rods);
+  if (!ex) return new Error('lesson: example');
+  if (!Array.isArray(practice) || practice.length !== 3) return new Error('lesson: practice must have exactly 3 problems');
+  const parsed = practice.map((p) => parseLessonProblem(p, rods));
+  const [a, b, c] = parsed;
+  if (!a || !b || !c) return new Error('lesson: practice problem');
+  return {
+    schemaVersion: 1,
+    id,
+    titleKey,
+    kind: k,
+    example: { ...ex, rods },
+    practice: [a, b, c],
+  };
+}
+
 /** @returns {State} */
 export function defaultState() {
   return { version: 1, lang: 'en', currentPlayer: null, players: {} };
@@ -150,7 +209,15 @@ function parsePlayer(v) {
       if (entry) log.push(entry);
     }
   }
-  return { xp: isNonNegFinite(xp) ? xp : 0, stars, bestMs, log };
+  /** @type {Record<string, true>} */
+  const lessonsDone = {};
+  const rawLessons = v['lessonsDone'];
+  if (isRecord(rawLessons)) {
+    for (const [k, done] of Object.entries(rawLessons)) {
+      if (done === true && k !== '__proto__') lessonsDone[k] = true;
+    }
+  }
+  return { xp: isNonNegFinite(xp) ? xp : 0, lessonsDone, stars, bestMs, log };
 }
 
 /**

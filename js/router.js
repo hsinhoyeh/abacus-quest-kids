@@ -2,16 +2,19 @@
 // (hashchange listener, mounting screens).
 
 /** @typedef {import('./types.js').Pack} Pack */
+/** @typedef {import('./types.js').Lesson} Lesson */
 
 /**
  * @typedef {{ name: 'players' } | { name: 'map' } | { name: 'parent' }
- *   | { name: 'play', packId: string } | { name: 'result', packId: string }} Route
+ *   | { name: 'play', packId: string } | { name: 'result', packId: string }
+ *   | { name: 'learn', lessonId: string }} Route
  */
 
 /**
  * @typedef {object} RouteContext
  * @property {boolean} hasPlayer
  * @property {(id: string) => Pack | null} pack
+ * @property {(id: string) => Lesson | null} lesson
  * @property {(pack: Pack) => boolean} unlocked
  * @property {(packId: string) => boolean} hasResult a finished run is held in memory
  */
@@ -31,14 +34,14 @@ export function parseRoute(hash) {
     if (head === 'players' || head === 'parent' || head === 'map') return { name: head };
     return MAP;
   }
-  if ((head !== 'play' && head !== 'result') || id === '') return MAP;
-  let packId;
+  if ((head !== 'play' && head !== 'result' && head !== 'learn') || id === '') return MAP;
+  let decoded;
   try {
-    packId = decodeURIComponent(id);
+    decoded = decodeURIComponent(id);
   } catch {
     return MAP;
   }
-  return { name: head, packId };
+  return head === 'learn' ? { name: 'learn', lessonId: decoded } : { name: head, packId: decoded };
 }
 
 /**
@@ -47,12 +50,14 @@ export function parseRoute(hash) {
  */
 export function routeHash(r) {
   if (r.name === 'play' || r.name === 'result') return `#/${r.name}/${encodeURIComponent(r.packId)}`;
+  if (r.name === 'learn') return `#/learn/${encodeURIComponent(r.lessonId)}`;
   return `#/${r.name}`;
 }
 
 /**
  * Redirect rules: no player -> picker; unknown/locked pack -> map; a result
- * page with no run in memory (a reload) -> map.
+ * page with no run in memory (a reload) -> map; unknown lesson -> map (lessons
+ * are never locked).
  * @param {Route} r
  * @param {RouteContext} ctx
  * @returns {Route}
@@ -63,6 +68,7 @@ export function resolveRoute(r, ctx) {
     const p = ctx.pack(r.packId);
     return p && ctx.unlocked(p) ? r : MAP;
   }
+  if (r.name === 'learn') return ctx.lesson(r.lessonId) ? r : MAP;
   if (r.name === 'result') return ctx.pack(r.packId) && ctx.hasResult(r.packId) ? r : MAP;
   return r;
 }

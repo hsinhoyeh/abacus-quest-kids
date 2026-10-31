@@ -35,6 +35,10 @@
  * @property {() => number} [now]
  * @property {number} [animMs] delay before a shown step is applied (default 600; 0 = immediately)
  * @property {HTMLElement} [soroban] element to place in the soroban slot (defaults to port.element)
+ * @property {'show' | 'try'} [startMode] open in Show me (default) or straight in Your turn (lesson practice)
+ * @property {string} [continueLabel] when set, finishing Your turn replaces the controls with one big
+ *   button of this label that calls `onContinue` (the lesson flow's "Next problem")
+ * @property {() => void} [onContinue]
  */
 
 /** English defaults. Every key this screen reads is here; i18n supplies the same keys. */
@@ -45,16 +49,16 @@ export const FALLBACK_STRINGS = {
   'tut.direct.remove': 'Take away {digit} on the {place} rod.',
   'tut.c5.add': 'Not enough lower beads. On the {place} rod add 5, then take away {complement}.',
   'tut.c5.remove': 'On the {place} rod take away 5, then add back {complement}.',
-  'tut.carry.remove': '{digit} is too big for the {place} rod. Take away {amount} here first.',
-  'tut.carry.remove.c5': '{digit} is too big for the {place} rod. Take away {amount} here first, using the 5 bead.',
+  'tut.carry.remove': '{digit} will not fit on the {place} rod. Take away {amount} here first, then carry 1 to the left.',
+  'tut.carry.remove.c5': '{digit} will not fit on the {place} rod. Take away {amount} here first, using the 5 bead. Then carry 1 to the left.',
   'tut.carry.ripple': 'The {place} rod is full. Clear it back to 0 and carry on to the left.',
   'tut.carry.add': 'Now add 1 on the {place} rod. That is the 10 we carried!',
   'tut.carry.add.c5': 'Now add 1 on the {place} rod, using the 5 bead. That is the 10 we carried!',
-  'tut.borrow.take': 'Not enough on the {toPlace} rod to take away {digit}. Borrow! Take 1 from the {place} rod. It is worth 10.',
-  'tut.borrow.take.c5': 'Not enough on the {toPlace} rod to take away {digit}. Borrow! Take 1 from the {place} rod, using the 5 bead.',
-  'tut.borrow.nine': 'The {place} rod was empty, so make it 9 as the borrowed 10 passes through.',
-  'tut.borrow.add': 'Now add {amount} on the {place} rod: 10 take away {digit} leaves {amount}.',
-  'tut.borrow.add.c5': 'Now add {amount} on the {place} rod, using the 5 bead: 10 take away {digit} leaves {amount}.',
+  'tut.borrow.take': 'Not enough to take away {digit}! Borrow 1 from the {fromPlace} on the left. It is worth 10.',
+  'tut.borrow.take.c5': 'Not enough to take away {digit}! Borrow 1 from the {fromPlace} on the left, using the 5 bead. It is worth 10.',
+  'tut.borrow.nine': 'The {place} is 0, so it has nothing to lend. Make it 9 and pass the 10 along.',
+  'tut.borrow.add': 'Now add {amount} on the {place} rod, because 10 - {digit} = {amount}.',
+  'tut.borrow.add.c5': 'Now add {amount} on the {place} rod, using the 5 bead, because 10 - {digit} = {amount}.',
   // Place names for {place}
   'tut.place.ones': 'ones',
   'tut.place.tens': 'tens',
@@ -144,8 +148,9 @@ export function mount(opts) {
   const turnBtn = button('yourturn', t('tut.yourTurn'), 'btn-primary');
   const undoBtn = button('undo', t('tut.undo'));
   const showBtn = button('showme', t('tut.showMe'), 'btn-info');
+  const continueBtn = button('continue', opts.continueLabel ?? '', 'btn-primary');
   const controls = make('div', 'controls');
-  controls.append(backBtn, replayBtn, nextBtn, undoBtn, showBtn, turnBtn);
+  controls.append(backBtn, replayBtn, nextBtn, undoBtn, showBtn, turnBtn, continueBtn);
   if (!/\btut\b/.test(root.className)) root.className = `${root.className} tut`.trim();
   root.replaceChildren(headEl, textEl, sorobanSlot, feedbackEl, controls);
 
@@ -211,6 +216,11 @@ export function mount(opts) {
     showBtn.hidden = show;
     turnBtn.hidden = !show && !done;
     turnBtn.textContent = done ? t('tut.again') : t('tut.yourTurn');
+    // A lesson flow takes over once Your turn is finished: one big button.
+    const finish = done && opts.continueLabel !== undefined;
+    continueBtn.hidden = !finish;
+    if (finish) backBtn.hidden = replayBtn.hidden = nextBtn.hidden = undoBtn.hidden = showBtn.hidden = turnBtn.hidden = true;
+    root.setAttribute('data-done', String(done));
   }
 
   // ---- Show me ----
@@ -258,16 +268,25 @@ export function mount(opts) {
   }
 
   /**
-   * A state strictly between before and after that differs from `before` only
-   * on the step's own rod: the kid is part-way through a multi-bead step.
+   * Mid-step: the state differs from `before` only on the step's own rod, and
+   * that rod's digit is one the step's own moves can reach (any subset of them,
+   * in any order). So a complement-5 step is fine whether the kid moves the
+   * heaven bead first (digit overshoots) or the earth beads first.
    * @param {number} v
    * @param {Step} step
    */
   function partWay(v, step) {
-    const lo = Math.min(step.before, step.after);
-    const hi = Math.max(step.before, step.after);
     const place = 10 ** (rodCount - 1 - step.rod);
-    return v > lo && v < hi && (v - step.before) % place === 0;
+    const diff = v - step.before;
+    if (diff % place !== 0) return false;
+    const digit = Math.floor(step.before / place) % 10;
+    const wanted = digit + diff / place;
+    let reachable = new Set([digit]);
+    for (const m of step.moves) {
+      const delta = (m.bead === 'heaven' ? 5 : 1) * (m.dir === 'toBeam' ? 1 : -1);
+      reachable = new Set([...reachable, ...[...reachable].map((d) => d + delta)]);
+    }
+    return reachable.has(wanted);
   }
 
   /** @param {number} v */
@@ -299,6 +318,7 @@ export function mount(opts) {
   nextBtn.addEventListener('click', () => goto(index + 1));
   replayBtn.addEventListener('click', () => playStep());
   turnBtn.addEventListener('click', () => startTry());
+  continueBtn.addEventListener('click', () => opts.onContinue?.());
   showBtn.addEventListener('click', () => startShow());
   undoBtn.addEventListener('click', () => {
     if (mode !== 'try' || done) return;
@@ -308,7 +328,8 @@ export function mount(opts) {
   });
 
   const off = port.onChange((v) => check(v));
-  startShow();
+  if (opts.startMode === 'try') startTry();
+  else startShow();
 
   return {
     destroy() {

@@ -97,3 +97,29 @@ Chromium, real `localStorage` (`test/e2e/sound.spec.js`). Real audio output cann
 | New best time | clearing a set level ends with the 4-note fanfare after the result shows "New record!" | – |
 
 Not verifiable here: how the chime sounds on a real iPad or phone (loudness, iPad Safari audio unlock, silent switch behaviour). That is the issue's "Verify on dev" step.
+
+## Tutorial mode (issue #34)
+Chromium with touch, real `localStorage`, real bead taps, nothing mocked, no clock needed: `reducedMotion: 'reduce'` makes the app apply each shown step at once (`test/e2e/tutorial.spec.js`). The taps are not hard-coded: the helper reads which beads the screen highlights in **Show me** (the beads a kid is told to move) and makes those taps in **Your turn**. Practice problems are read the same way from a Show me peek. Screenshots are viewport-sized.
+
+| Step | Asserted | Screenshot |
+|------|----------|-----------|
+| Map, new player | Learn section above the depths, 7 lesson cards, 4 under a Borrowing heading, no ✓ yet | [phone](screenshots/23-tutorial-1-map-learn.png) · [portrait](screenshots/24-tutorial-ipad-portrait-1-map-learn.png) · [landscape](screenshots/24-tutorial-ipad-landscape-1-map-learn.png) |
+| Borrow 1 (12 − 5), Show me | step 1 "Borrow 1 from the tens" with the bead glowing, Back / Replay / Next / Your turn fully inside the viewport and at least 44 px, no hearts, no fuse, XP stays 0 | [phone](screenshots/23-tutorial-2-show-step-1.png) · [portrait](screenshots/24-tutorial-ipad-portrait-2-show-step-1.png) · [landscape](screenshots/24-tutorial-ipad-landscape-2-show-step-1.png) |
+| Show me, step 2, Next to the end | "add 5 because 10 - 5 = 5", readout 7, Next disabled | [phone](screenshots/23-tutorial-3-show-step-2.png) |
+| Your turn, deliberate wrong tap | hint "Almost!", next move glows, still "Step 1 of 2"; Undo clears it | [phone](screenshots/23-tutorial-5-hint.png) · [portrait](screenshots/24-tutorial-ipad-portrait-5-hint.png) · [landscape](screenshots/24-tutorial-ipad-landscape-5-hint.png) |
+| Example done | "You did it!", one big Start practice button | [phone](screenshots/23-tutorial-6-example-done.png) |
+| Practice 1 to 3 | "Practice n of 3", rods start at that problem (not the last answer), no hint until needed, Next problem / Finish | [phone](screenshots/23-tutorial-7-practice-1.png) |
+| Lesson complete | "Lesson complete!", Next lesson and Back to map in view, XP still 0 | [phone](screenshots/23-tutorial-9-complete.png) · [portrait](screenshots/24-tutorial-ipad-portrait-9-complete.png) · [landscape](screenshots/24-tutorial-ipad-landscape-9-complete.png) |
+| Map after the lesson, then reload | ✓ on Borrow 1 only; still ✓ after a reload; `lessonsDone` = `{borrow-1: true}`, `xp` = 0 | [phone](screenshots/23-tutorial-10-map-ticked.png) |
+| All seven lessons | every lesson (add basics, complement of 5, carry incl. 99 + 1, four borrows incl. 100 − 7) finishes with real taps; 7 ticks; no Next lesson after the last | – |
+| 中文 + 注音 | the Learn section and every lesson string carry 注音 (no bare Han), the long 借位 sentences are not clipped, controls in view, no horizontal scroll | [map](screenshots/23-tutorial-zh-1-map-learn.png) · [step 1](screenshots/23-tutorial-zh-2-show-step-1.png) · [hint](screenshots/23-tutorial-zh-4-hint.png) · [100 − 7](screenshots/23-tutorial-zh-5-borrow-3-nine.png) · [iPad](screenshots/24-tutorial-ipad-portrait-zh-5-borrow-3-nine.png) |
+
+**Defects found and fixed while looking at the screenshots**
+1. Phone: with the stacked layout the controls fell below the fold (the 7-row soroban plus the rule text is taller than 844 px). The lesson is now one grid: step line, rule text and feedback beside the soroban, controls full width underneath; the Clear button is hidden in lessons (Undo is the reset) and the lesson title is visually hidden on phones. Everything is in the first 844 px, in English and 中文.
+2. The rule text was a flex container, so a long sentence with 注音 did not wrap and pushed the page sideways (scrollWidth 462 at 390). It is a normal wrapping block now.
+3. iPad portrait: the stacked layout was 1386 px tall in a 1180 px viewport. At 700 px and wider the soroban moves to a right column in either orientation, and the bead size follows the viewport height.
+4. Button labels with 注音 overflowed their buttons ("再看一次"): the zh labels are shorter (重看) and smaller, and the zh progress / practice labels are compact.
+5. The `−` sign is missing from the pixel font and rendered as a low dash; strings use `-`.
+6. Logic: a correct complement-5 move done heaven-bead first (3 + 4: 3 → 8 → 7) showed a "wrong" hint, because only values between the step's start and end counted as part-way. Any value the step's own moves can reach on that rod now waits quietly.
+
+Not verifiable here: real iPad Safari and a real finger on the 44 px beads.

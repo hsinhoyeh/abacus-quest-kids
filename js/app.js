@@ -9,14 +9,17 @@ import { createProgress } from './core/progress.js';
 import { createAnnotator } from './i18n/annotator.js';
 import { LANGS, createI18n, resolveLang, screenStrings } from './i18n/index.js';
 import { PACKS, nextPack, packById } from './packs/index.js';
+import { LESSONS, lessonById, nextLesson } from './packs/lessons.js';
 import { mountPlay } from './play.js';
 import { parseRoute, resolveRoute, routeHash } from './router.js';
 import { finishRun } from './run.js';
 import { createBrowserStorage } from './storage.js';
+import { mount as mountLesson } from './ui/lessonScreen.js';
 import { mount as mountMap } from './ui/mapScreen.js';
 import { mount as mountParent } from './ui/parentScreen.js';
 import { mount as mountPicker } from './ui/playerPicker.js';
 import { formatMs, mount as mountResult } from './ui/resultScreen.js';
+import { createSorobanWidget } from './ui/sorobanWidget.js';
 
 /** @typedef {import('./router.js').Route} Route */
 /** @typedef {import('./types.js').Pack} Pack */
@@ -166,7 +169,8 @@ export function startApp(env) {
       xp.setAttribute('data-role', 'xp-pill');
       kids.push(who, xp);
     }
-    if (route.name !== 'play') kids.push(langSwitch());
+    // Strings are fixed at mount, so a switch mid-run or mid-lesson would lose it.
+    if (route.name !== 'play' && route.name !== 'learn') kids.push(langSwitch());
     kids.push(soundToggle());
     if (name !== null) {
       const nav = make('nav', 'topbar-nav');
@@ -184,6 +188,7 @@ export function startApp(env) {
     const route = resolveRoute(parseRoute(win.location.hash), {
       hasPlayer: progress.currentPlayer() !== null,
       pack: packById,
+      lesson: lessonById,
       unlocked,
       hasResult: (id) => lastResult?.packId === id,
     });
@@ -208,7 +213,17 @@ export function startApp(env) {
           packs: PACKS,
           progress,
           onSelect: (packId) => go({ name: 'play', packId }),
-          strings: { ...S.map, packTitles: S.packTitles },
+          lessons: LESSONS,
+          isLessonDone: (id) => progress.isLessonDone(id),
+          onLesson: (lessonId) => go({ name: 'learn', lessonId }),
+          strings: {
+            ...S.map,
+            packTitles: S.packTitles,
+            lessonTitles: S.lesson,
+            learnTitle: S.learn['title'] ?? '',
+            borrowGroup: S.learn['borrowGroup'] ?? '',
+            lessonDone: S.learn['done'] ?? '',
+          },
         });
         // Best time under each pack card: the kid races the clock.
         for (const card of Array.from(panel.querySelectorAll('[data-role="pack"]'))) {
@@ -248,6 +263,39 @@ export function startApp(env) {
             go({ name: 'result', packId: pack.id });
             return summary;
           },
+        });
+        break;
+      }
+      case 'learn': {
+        const lesson = lessonById(route.lessonId);
+        if (!lesson) break;
+        const heading = make('h1', 'play-title lesson-heading', tr(lesson.titleKey));
+        const stage = make('div', 'lesson-stage');
+        panel.replaceChildren(heading, stage);
+        panel.classList.add('screen-learn');
+        // Captions under the rods (ones first): on a tablet always, on a phone
+        // only where the short English ones (1s, 10s, 100s) fit under the beads.
+        const wide = win.matchMedia?.('(min-width: 600px)').matches ?? false;
+        const places = ['ones', 'tens', 'hundreds', 'thousands', 'tenThousands'];
+        const placeLabels = wide || i18n.getLang() === 'en' ? places.slice(0, lesson.example.rods).map((p) => tr(`tut.label.${p}`)) : [];
+        const soroban = createSorobanWidget(doc, {
+          rods: lesson.example.rods,
+          clearLabel: S.play.clear,
+          heavenLabel: S.play.heaven,
+          earthLabel: S.play.earth,
+          placeLabels,
+        });
+        const next = nextLesson(lesson.id);
+        const reduced = win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+        current = mountLesson({
+          root: stage,
+          lesson,
+          port: soroban,
+          strings: { ...S.tutorial, ...S.lesson },
+          ...(reduced ? { animMs: 0 } : {}),
+          onComplete: () => progress.markLessonDone(lesson.id),
+          onBack: () => go({ name: 'map' }),
+          onNext: next ? () => go({ name: 'learn', lessonId: next.id }) : null,
         });
         break;
       }

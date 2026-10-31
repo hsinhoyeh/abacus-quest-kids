@@ -85,6 +85,13 @@ body {
   .map-pack { min-height: 76px; font-size: .8rem; }
   .map-stars { font-size: 1.6rem; }
   .map-requirement { font-size: .9rem; }
+  /* Learn: full width above the depths, lessons side by side */
+  .screen-map > .map-learn { grid-column: 1 / -1; padding: 16px 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; align-items: stretch; }
+  .map-learn > .map-learn-title, .map-learn > .map-learn-group { grid-column: 1 / -1; margin: 0; }
+  .map-learn-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .map-learn-group > .map-learn-group-title { grid-column: 1 / -1; margin: 0; font-size: .95rem; }
+  .map-lesson { margin: 0; min-height: 76px; font-size: .8rem; }
+  .map-lesson-done { font-size: 1.8rem; }
 
   /* Result / picker / parent: bigger type, bounded widths */
   .result { gap: 16px; padding: 12px 0; }
@@ -101,7 +108,7 @@ body {
 
   /* Chinese keeps its larger sizes relative to the scaled rem */
   :root:lang(zh-TW) .btn,
-  :root:lang(zh-TW) :is(.picker-add, .picker-player, .level-mine, .level-skip, .level-retry, .set-check, .result-retry, .result-next, .map-pack) { font-size: 1.05rem; }
+  :root:lang(zh-TW) :is(.picker-add, .picker-player, .level-mine, .level-skip, .level-retry, .set-check, .result-retry, .result-next, .map-pack, .map-lesson) { font-size: 1.05rem; }
   :root:lang(zh-TW) .topbar .btn { font-size: .85rem; }
   :root:lang(zh-TW) .topbar .topbar-sound { font-size: 1.3rem; }
   :root:lang(zh-TW) .topbar .pill, :root:lang(zh-TW) .level-xp { font-size: .85rem; }

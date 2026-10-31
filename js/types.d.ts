@@ -74,6 +74,8 @@ export interface PlayLogEntry {
 
 export interface PlayerState {
   xp: number;
+  /** Tutorial lessons finished (additive; absent in old blobs, repaired to {}). */
+  lessonsDone: Record<string, true>;
   /** Best star count (1..3) per pack id. */
   stars: Record<string, number>;
   /** Best (lowest) time in ms per pack id. */
@@ -226,4 +228,30 @@ export interface ExplainInput {
   operand: number;
   /** Number of rods; start and result must be in [0, 10^rods). */
   rods: number;
+}
+
+// ---- Lessons (packs/lessons.js, validated by parseLesson) ----
+
+/** One lesson problem: `start op operand` on the lesson's rods. */
+export interface LessonProblem {
+  start: number;
+  op: '+' | '-';
+  operand: number;
+}
+
+/** The worked example: a problem plus the rod count of the soroban. */
+export interface LessonExample extends LessonProblem {
+  rods: number;
+}
+
+/** Lesson definition, schema v1. Data only; plans come from explain() at run time. */
+export interface Lesson {
+  schemaVersion: 1;
+  id: string;
+  titleKey: string;
+  /** The technique taught: borrow lessons are grouped under 借位 on the map. */
+  kind: PlanStepKind;
+  example: LessonExample;
+  /** Exactly three practice problems (same technique, same rods as the example). */
+  practice: [LessonProblem, LessonProblem, LessonProblem];
 }
