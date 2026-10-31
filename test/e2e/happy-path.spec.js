@@ -107,7 +107,8 @@ test('happy path: player, set-the-number, add/sub, results, reload keeps progres
       await setValue(page, target);
       if (i === 1) await shot(page, '05-set-target-placed');
       await page.getByRole('button', { name: 'Check' }).click();
-      if (i < total) await expect(page.locator('[data-role="ack-msg"]')).toHaveText('Correct! Nice placing!');
+      // #28: the last placement is acknowledged too, before the result screen.
+      await expect(page.locator('[data-role="ack-msg"]')).toHaveText('Correct! Nice placing!');
     }
   });
 
@@ -147,12 +148,12 @@ test('happy path: player, set-the-number, add/sub, results, reload keeps progres
       await setValue(page, answer);
       if (i === 0) await shot(page, '10-addsub-answer-on-beads');
       await page.getByRole('button', { name: 'Mine!' }).click();
+      await expect(xp).not.toHaveText(`XP ${xpBefore}`);
+      await expect(page.locator('[data-role="ack-msg"]')).toHaveText(/^Correct! \+10 XP( {2}\u26A1\+\d+ speed)?$/);
       if (i < 9) {
-        await expect(xp).not.toHaveText(`XP ${xpBefore}`);
         // #25: a correct answer is acknowledged, in its own element, and it
         // stays while the next problem is already on screen.
         await expect(page.locator('[data-role="ack"]')).toHaveAttribute('data-outcome', 'correct');
-        await expect(page.locator('[data-role="ack-msg"]')).toHaveText(/^Correct! \+10 XP( {2}\u26A1\+\d+ speed)?$/);
         if (i === 2) await expect(page.locator('[data-role="streak"]')).toHaveText('3 in a row!');
         await expect(page.locator('[data-role="problem"]')).toHaveText(/^[+-] \d$/);
         if (i === 0) await shot(page, '10b-addsub-correct-ack');
@@ -242,4 +243,58 @@ test('Creeper fuse: letting it run out costs one heart', async ({ page }) => {
   const saved = JSON.parse((await page.evaluate((k) => localStorage.getItem(k), KEY)) ?? 'null');
   expect(saved.players[NICK].log).toEqual([{ packId: 'addsub-1', correct: false, ms: 20_000, at: expect.any(Number) }]);
   expect(firstProblem).toMatch(/^[+-] \d$/);
+});
+
+/** @param {Page} page */
+const resultShown = (page) => page.locator('[data-screen="result"]');
+
+test('last correct answer: ack stays ~1 s, then the result (add/sub)', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-11-02T16:00:00') });
+  await createPlayer(page);
+  await card(page, 'addsub-1').click();
+  await page.clock.pauseAt(new Date('2026-11-02T16:05:00'));
+  await page.getByRole('button', { name: 'Start!' }).click();
+  await page.clock.runFor(3_100);
+  await expect(page.locator('.play-area')).toBeVisible();
+  for (let i = 0; i < 10; i++) {
+    const [op, operand] = String(await page.locator('[data-role="problem"]').textContent()).split(' ');
+    const start = Number(await page.locator('.play-area .soroban-readout').textContent());
+    await setValue(page, op === '+' ? start + Number(operand) : start - Number(operand));
+    await page.getByRole('button', { name: 'Mine!' }).click();
+  }
+  // Right after the final correct answer: acknowledgement up, no result yet.
+  await expect(page.locator('[data-role="ack-msg"]')).toHaveText(/^Correct! \+\d+ XP/);
+  await expect(page.locator('[data-role="streak"]')).toHaveText('10 in a row!');
+  await expect(page.locator('[data-role="mine"]')).toBeDisabled();
+  await expect(resultShown(page)).toHaveCount(0);
+  await shot(page, '17-addsub-last-ack');
+  await page.clock.runFor(900);
+  await expect(resultShown(page)).toHaveCount(0);
+  await expect(page.locator('[data-role="ack-msg"]')).toHaveText(/^Correct!/);
+  await page.clock.runFor(200);
+  await expect(resultShown(page)).toBeVisible();
+  await expect(page.locator('.result-stars')).toHaveAttribute('data-stars', '3');
+  await shot(page, '17b-addsub-last-ack-then-result');
+});
+
+test('last correct placement: ack stays ~1 s, then the result (set-the-number)', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-11-02T16:00:00') });
+  await createPlayer(page);
+  await card(page, 'set-1').click();
+  await page.clock.pauseAt(new Date('2026-11-02T16:05:00'));
+  await page.getByRole('button', { name: 'Start!' }).click();
+  await page.clock.runFor(3_100);
+  await expect(page.locator('.play-area')).toBeVisible();
+  for (let i = 0; i < 8; i++) {
+    await setValue(page, Number(await page.locator('[data-role="target"]').textContent()));
+    await page.getByRole('button', { name: 'Check' }).click();
+  }
+  await expect(page.locator('[data-role="ack-msg"]')).toHaveText('Correct! Nice placing!');
+  await expect(page.locator('[data-role="check"]')).toBeDisabled();
+  await expect(resultShown(page)).toHaveCount(0);
+  await page.clock.runFor(900);
+  await expect(resultShown(page)).toHaveCount(0);
+  await page.clock.runFor(200);
+  await expect(resultShown(page)).toBeVisible();
+  await expect(page.locator('.result-xp')).toHaveText('+80 XP');
 });
