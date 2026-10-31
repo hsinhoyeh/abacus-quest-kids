@@ -33,6 +33,8 @@ jobs:
           cp index.html _site/
           [ -d js ] && cp -r js _site/js
           [ -d css ] && cp -r css _site/css
+          [ -d fonts ] && cp -r fonts _site/fonts
+          [ -d img ] && cp -r img _site/img
           true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

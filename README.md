@@ -22,5 +22,17 @@ npm test            # node --test
 python3 -m http.server   # serve the static site locally
 ```
 
-Unofficial fan-style project; not affiliated with Mojang or Microsoft.
-No Minecraft assets are used.
+## Art & fonts
+
+- All art (blocks, beads, hearts, stars, depth backgrounds) is original CSS
+  made for this project (`css/`); nothing is copied from Minecraft.
+- Pixel font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P),
+  (c) The Press Start 2P Project Authors, SIL Open Font License 1.1
+  (`fonts/OFL.txt`). Self-hosted in `fonts/`; the site makes no third-party
+  requests. Chinese text falls back to the system PingFang TC / Microsoft
+  JhengHei / Noto Sans TC fonts.
+- Reusable theme classes: `.panel .btn .btn-primary .pill .xp-bar .stars .hearts
+  .star .heart .depth-surface/-cave/-deep/-nether/-end`.
+
+Unofficial fan-style project; not affiliated with, endorsed by, or connected to
+Mojang or Microsoft. No Minecraft assets (logo, textures, audio) are used.
