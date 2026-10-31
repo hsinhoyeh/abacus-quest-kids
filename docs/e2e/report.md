@@ -83,3 +83,17 @@ Asserted at each screen: `scrollWidth <= clientWidth` (no sideways scroll). On b
 - 注音: `rt` size raised to `max(.6em, 13px)` on tablets; 中文 labels keep their larger sizes (checked at all four iPad viewports with 中文 selected; the taller 注音 top bar gets a slightly smaller bead budget in landscape, so on 1024×768 the footnote at the very bottom can still scroll, but Mine!/Check stay in view).
 
 Not verifiable here: real iPad Safari (rubber-banding, the address bar and home indicator, split view / Stage Manager window sizes). Chromium at the iPad CSS sizes is the proxy.
+
+## Sound (issue #30)
+Chromium, real `localStorage` (`test/e2e/sound.spec.js`). Real audio output cannot be heard or asserted in CI: the page is loaded with `?audiotest=1`, which swaps the WebAudio port for a recording one that fills `window.__aqkAudioLog`. The log proves what the app asked the port to play (`resume`, `tone`, `silence`), not what a speaker produced.
+
+| Check | Asserted | Screenshot |
+|-------|----------|-----------|
+| Speaker button in the top bar (390 px) | visible, at least 44 px, default ON (`aria-pressed="true"`, label "Sound on"), on the picker, map and mid-run, overlaps no other bar control, bar stays two rows (as before), no sideways scroll | [on](screenshots/21-sound-toggle-on.png) |
+| Mute | tap: 🔇, `aria-pressed="false"`, label "Sound off", `aqk.sound = off` in storage, survives a reload; tap again: `on` | [muted](screenshots/21-sound-toggle-muted.png) |
+| iPad portrait 820 / landscape 1180 | speaker on the same row as the EN / 中文 switch, in English and 中文 + 注音 | [820](screenshots/21-sound-toggle-820-zh.png) · [1180](screenshots/21-sound-toggle-1180-zh.png) |
+| Set-the-number level | wrong placement: 0 tones; right placement: the 2-note ding at the same moment as the "Correct! Nice placing!" ack; muted mid-run: `silence` requested, no tones; unmuted: rings again without another tap | – |
+| Add/sub level | skip: 0 tones; correct x3: ding, ding, then the 3-note chime at "3 in a row!"; wrong: 0 tones | – |
+| New best time | clearing a set level ends with the 4-note fanfare after the result shows "New record!" | – |
+
+Not verifiable here: how the chime sounds on a real iPad or phone (loudness, iPad Safari audio unlock, silent switch behaviour). That is the issue's "Verify on dev" step.

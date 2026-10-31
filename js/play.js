@@ -46,6 +46,7 @@ const NO_FUSE_MS = Number.MAX_SAFE_INTEGER;
  * @property {(cb: () => void, ms: number) => number} schedule setTimeout-like; delays the result after a correct final answer
  * @property {(id: number) => void} cancel clearTimeout-like
  * @property {PlayStrings} [strings]
+ * @property {{ onCorrect(e: { streak: number }): void }} [sound] positive-only sound events
  */
 
 /**
@@ -89,6 +90,7 @@ export function mountPlay(opts) {
   let seen = 0; // results (add/sub) or solved targets (set) already handled
   let seenCorrect = 0;
   let lastSolveAt = 0;
+  let setStreak = 0; // consecutive first-try placements (set packs)
 
   const fuse = createFuse({
     clock,
@@ -117,6 +119,7 @@ export function mountPlay(opts) {
     area.hidden = false;
     seen = 0;
     seenCorrect = 0;
+    setStreak = 0;
     lastSolveAt = clock();
     if (timed) {
       level = mountLevel({
@@ -180,6 +183,8 @@ export function mountPlay(opts) {
           const r = s.results[seen++];
           if (r) logAnswer(progress, pack.id, r);
         }
+        // Same moment as the level's "Correct! +N XP" ack; wrong/timeout/skip stay silent.
+        if (s.results[seen - 1]?.outcome === 'correct') opts.sound?.onCorrect({ streak: s.streak });
         timeoutPending = false;
         if (s.status === 'playing') fuse.nextProblem(fuseMs);
       }
@@ -193,6 +198,8 @@ export function mountPlay(opts) {
         lastSolveAt = now;
         seen = st.index;
         seenCorrect = st.correct;
+        setStreak = firstTry ? setStreak + 1 : 0;
+        opts.sound?.onCorrect({ streak: setStreak }); // a placement is acknowledged whenever it is right
         if (!st.done) fuse.nextProblem(fuseMs);
       }
       if (st.done) {

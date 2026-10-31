@@ -347,6 +347,10 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
 .topbar-lang .btn:last-child { border-left-width: 2px; }
 .topbar-lang .btn[aria-pressed="true"] { background: var(--gold); color: var(--on-accent); text-shadow: none; }
 
+/* ---------- Sound toggle (js/app.js) ---------- */
+.topbar .topbar-sound { min-width: var(--tap); padding: .3rem .5rem; font-size: 1.2rem; line-height: 1; font-family: var(--font-body); }
+.topbar .topbar-sound[aria-pressed="false"] { background: var(--stone-dark); color: #fff; }
+
 /* ---------- 注音 (js/i18n/annotator.js): vertical column to the RIGHT of the character ----------
    <ruby class="zy"><span class="zy-c">字</span><rt class="zy-rt"><span class="zy-b">ㄗ</span><span class="zy-t">ˋ</span></rt></ruby>
    ruby/rt are turned into a flex row so the reading sits beside, not above, the
@@ -372,3 +376,4 @@ rt.zy-neu .zy-t { margin-bottom: -1px; }
 :root:lang(zh-TW) .map-requirement, :root:lang(zh-TW) .map-best, :root:lang(zh-TW) .map-lock { font-size: 1rem; line-height: 1.7; }
 :root:lang(zh-TW) .play-area .level-feedback, :root:lang(zh-TW) .set-feedback, :root:lang(zh-TW) .set-progress { font-size: 1rem; line-height: 1.8; }
 :root:lang(zh-TW) .topbar .topbar-langbtn { font-size: .9rem; }
+:root:lang(zh-TW) .topbar .topbar-sound { font-size: 1.2rem; }

@@ -19,6 +19,8 @@ export const EN = {
   'nav.lang': 'Language',
   'nav.langEn': 'EN',
   'nav.langZh': '中文',
+  'nav.soundOn': 'Sound on',
+  'nav.soundOff': 'Sound off',
   'best': 'Best {time}',
   'storageWarning': 'This browser is not saving progress (private mode?). Play still works.',
 
@@ -115,6 +117,8 @@ export const ZH_TW = {
   'nav.lang': '語言',
   'nav.langEn': 'EN',
   'nav.langZh': '中文',
+  'nav.soundOn': '聲音：開',
+  'nav.soundOff': '聲音：關',
   'best': '最快 {time}',
   'storageWarning': '這裡沒辦法存下你的進度，不過還是可以玩喔！',
 
