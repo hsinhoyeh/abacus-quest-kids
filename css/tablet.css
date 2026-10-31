@@ -35,6 +35,7 @@ body {
   .topbar { gap: 12px; margin-bottom: 12px; }
   .topbar-brand { font-size: .9rem; }
   .topbar .btn { padding: .5rem .9rem; font-size: .65rem; }
+  .topbar .topbar-sound { font-size: 1.3rem; padding: .4rem .7rem; }
   .topbar .pill { min-height: 40px; padding: .3rem .8rem; font-size: .7rem; }
   h1 { font-size: 1.1rem; }
   .screen h1 { font-size: 1.1rem; }
@@ -102,6 +103,7 @@ body {
   :root:lang(zh-TW) .btn,
   :root:lang(zh-TW) :is(.picker-add, .picker-player, .level-mine, .level-skip, .level-retry, .set-check, .result-retry, .result-next, .map-pack) { font-size: 1.05rem; }
   :root:lang(zh-TW) .topbar .btn { font-size: .85rem; }
+  :root:lang(zh-TW) .topbar .topbar-sound { font-size: 1.3rem; }
   :root:lang(zh-TW) .topbar .pill, :root:lang(zh-TW) .level-xp { font-size: .85rem; }
   :root:lang(zh-TW) .topbar-brand { font-size: 1rem; }
   :root:lang(zh-TW) h1, :root:lang(zh-TW) h2 { font-size: 1.3rem; }

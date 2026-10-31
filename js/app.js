@@ -2,6 +2,9 @@
 // user-visible string comes from js/i18n (EN / zh-TW); in zh-TW the annotator
 // adds 注音 after each render.
 
+import { createSound } from './audio/chime.js';
+import { readMuted, writeMuted } from './audio/mute.js';
+import { createLogPort, createWebAudioPort } from './audio/webAudioPort.js';
 import { createProgress } from './core/progress.js';
 import { createAnnotator } from './i18n/annotator.js';
 import { LANGS, createI18n, resolveLang, screenStrings } from './i18n/index.js';
@@ -53,6 +56,26 @@ export function startApp(env) {
   };
   applyLang(i18n.getLang());
 
+  // Sound: pure decisions (audio/chime.js) over a WebAudio port. ?audiotest=1
+  // swaps in a recording port (window.__aqkAudioLog) so e2e can assert requests.
+  let muted = readMuted(storage);
+  /** @type {unknown[] | null} */
+  let audioLog = null;
+  if (new URLSearchParams(win.location.search).get('audiotest') === '1') {
+    audioLog = [];
+    /** @type {any} */ (win).__aqkAudioLog = audioLog;
+  }
+  const sound = createSound({
+    port: audioLog ? createLogPort(audioLog) : createWebAudioPort(win),
+    isMuted: () => muted,
+  });
+  // Audio may only start from a user gesture: the first tap/click unlocks it.
+  const GESTURES = ['pointerdown', 'touchstart', 'click'];
+  const unlock = () => sound.unlock();
+  for (const type of GESTURES) doc.addEventListener(type, unlock, { passive: true });
+  // Keep forwarding until a click: some iOS versions only unlock on touchend/click.
+  doc.addEventListener('click', () => { for (const type of GESTURES) doc.removeEventListener(type, unlock); }, { once: true, passive: true });
+
   /** @type {{ packId: string, summary: ResultSummary } | null} */
   let lastResult = null;
   /** @type {{ destroy(): void } | null} */
@@ -97,6 +120,26 @@ export function startApp(env) {
     if (lang === 'zh-TW') annotator.enable();
   }
 
+  /** Speaker button: mute toggle, on every screen (also mid-run). */
+  function soundToggle() {
+    const b = button('btn topbar-sound', '', () => {
+      muted = !muted;
+      writeMuted(storage, muted);
+      if (muted) sound.silence();
+      paint();
+    });
+    b.setAttribute('data-role', 'sound-toggle');
+    const paint = () => {
+      b.textContent = muted ? '🔇' : '🔊';
+      const label = tr(muted ? 'nav.soundOff' : 'nav.soundOn');
+      b.setAttribute('aria-label', label);
+      b.setAttribute('title', label);
+      b.setAttribute('aria-pressed', String(!muted));
+    };
+    paint();
+    return b;
+  }
+
   /** EN | 中文 switch. Hidden mid-run: strings are fixed at mount and a switch would lose the run. */
   function langSwitch() {
     const group = make('div', 'topbar-lang');
@@ -124,6 +167,7 @@ export function startApp(env) {
       kids.push(who, xp);
     }
     if (route.name !== 'play') kids.push(langSwitch());
+    kids.push(soundToggle());
     if (name !== null) {
       const nav = make('nav', 'topbar-nav');
       /** @type {'map' | 'parent'} */
@@ -196,9 +240,11 @@ export function startApp(env) {
           schedule: (cb, ms) => win.setTimeout(cb, ms),
           cancel: (id) => win.clearTimeout(id),
           strings: S.play,
+          sound,
           onFinish: (run) => {
             const summary = finishRun(progress, pack, run);
             lastResult = { packId: pack.id, summary };
+            if (summary.newRecord) sound.onRecord();
             go({ name: 'result', packId: pack.id });
             return summary;
           },
