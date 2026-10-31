@@ -1,5 +1,7 @@
 // Seeded add/subtract step generator. Pure: no DOM, no clock, no Math.random.
 
+import { explain } from './explain.js';
+
 /** @typedef {import('../types.js').Problem} Problem */
 /** @typedef {import('../types.js').StepKind} StepKind */
 /** @typedef {Pick<import('../types.js').Pack, 'rods' | 'allow' | 'digits' | 'count'>} GenSpec */
@@ -22,43 +24,30 @@ export function createRng(seed) {
 }
 
 /**
- * Classify a step by per-digit arithmetic, lowest digit first.
- * Priority: borrow / complement10 (carry) > complement5 > plain.
- * Assumption: a digit that lands exactly on 5 (e.g. 2+3, 5-3) is a single
- * heaven bead and counts as plain.
+ * Classify a step from the explain engine's plan (single source of truth):
+ * the strongest step kind wins, borrow > carry > complement5 > direct,
+ * mapped to the pack vocabulary (direct -> plain, carry -> complement10).
+ * Needs start >= 0, operand >= 1 and a non-negative result (explain throws
+ * RangeError otherwise).
  * @param {number} start
  * @param {number} operand
  * @param {'+' | '-'} op
  * @returns {StepKind}
  */
 export function classify(start, operand, op) {
-  let s = start;
-  let d = operand;
-  let carry = 0; // carry (add) or borrow (subtract) into the next digit
-  let comp5 = false;
-  while (s > 0 || d > 0 || carry > 0) {
-    const sd = s % 10;
-    const amount = (d % 10) + carry;
-    if (op === '+') {
-      const sum = sd + amount;
-      if (sum >= 10) {
-        carry = 1;
-      } else {
-        carry = 0;
-        if (sd < 5 && amount < 5 && sum > 5) comp5 = true;
-      }
-    } else if (sd - amount < 0) {
-      carry = 1;
-    } else {
-      carry = 0;
-      if (sd > 5 && amount < 5 && sd - 5 < amount) comp5 = true;
-    }
-    s = Math.floor(s / 10);
-    d = Math.floor(d / 10);
-    if (carry === 1) return op === '+' ? 'complement10' : 'borrow';
+  const result = op === '+' ? start + operand : start - operand;
+  const rods = String(Math.max(start, operand, result)).length;
+  let kind = 0; // 0 plain, 1 complement5, 2 carry, 3 borrow
+  for (const step of explain({ start, op, operand, rods })) {
+    const k = RANK[step.kind];
+    if (k > kind) kind = k;
   }
-  return comp5 ? 'complement5' : 'plain';
+  return /** @type {StepKind} */ (KINDS[kind]);
 }
+
+/** @type {Record<import('../types.js').PlanStepKind, number>} */
+const RANK = { direct: 0, complement5: 1, carry: 2, borrow: 3 };
+const KINDS = ['plain', 'complement5', 'complement10', 'borrow'];
 
 const MAX_ATTEMPTS = 200;
 
