@@ -30,6 +30,10 @@ export class StubElement {
     this.attributes.set(k, String(v));
   }
   /** @param {string} k */
+  removeAttribute(k) {
+    this.attributes.delete(k);
+  }
+  /** @param {string} k */
   getAttribute(k) {
     return this.attributes.get(k) ?? null;
   }

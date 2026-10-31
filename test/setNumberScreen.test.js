@@ -48,7 +48,7 @@ test('Check judges from port.getValue(): correct advances to the next level and 
   el('check').click();
   assert.equal(el('target').textContent, '42');
   assert.equal(el('progress').textContent, 'Level 2 of 2');
-  assert.equal(el('feedback').getAttribute('data-outcome'), 'correct');
+  assert.equal(el('ack').getAttribute('data-outcome'), 'correct');
   assert.equal(port.getValue(), 0);
 });
 
@@ -101,4 +101,38 @@ test('empty target list reports done immediately; destroy clears the root', () =
   const { done, screen } = setup([]);
   assert.deepEqual(done, [{ correct: 0, total: 0, ms: 0 }]);
   screen.destroy();
+});
+
+test('a correct placement is acknowledged (message + pop) and stays while the next target shows', () => {
+  const { el, port } = setup([7, 42]);
+  port.setValue(7);
+  el('check').click();
+  assert.equal(el('ack-msg').textContent, 'Correct! Nice placing!');
+  assert.equal(el('ack').getAttribute('aria-live'), 'polite');
+  assert.ok(el('ack').getAttribute('data-pop'));
+  assert.ok(el('target').getAttribute('data-pop'));
+  assert.equal(el('target').textContent, '42');
+  assert.equal(el('check').disabled, false);
+  const first = el('ack').getAttribute('data-pop');
+  port.setValue(42);
+  el('check').click();
+  assert.ok(el('ack').getAttribute('data-pop') !== first);
+});
+
+test('wrong placements show no acknowledgement and clear an earlier one', () => {
+  const { el, port } = setup([7, 42]);
+  port.setValue(7);
+  el('check').click();
+  port.setValue(1);
+  el('check').click();
+  assert.equal(el('ack-msg').textContent, '');
+  assert.equal(el('ack').getAttribute('data-outcome'), null);
+});
+
+test('the last correct placement is acknowledged too, next to the done message', () => {
+  const { el, port } = setup([7]);
+  port.setValue(7);
+  el('check').click();
+  assert.equal(el('ack-msg').textContent, 'Correct! Nice placing!');
+  assert.equal(el('feedback').getAttribute('data-outcome'), 'done');
 });

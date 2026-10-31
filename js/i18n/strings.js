@@ -76,7 +76,9 @@ export const EN = {
   'level.mine': 'Mine!',
   'level.skip': 'Skip',
   'level.retry': 'Try again',
-  'level.correct': 'Mined! +{xp} XP',
+  'level.correct': 'Correct! +{xp} XP',
+  'level.speed': '\u26A1+{bonus} speed',
+  'level.streak': '{n} in a row!',
   'level.wrong': 'Not quite: it was {target}. -1 heart',
   'level.skipped': 'Skipped',
   'level.timeout': 'Boom! The fuse ran out. -1 heart',
@@ -88,7 +90,7 @@ export const EN = {
   // Set-the-number level
   'set.check': 'Check',
   'set.progress': 'Level {n} of {total}',
-  'set.correct': 'You got it!',
+  'set.correct': 'Correct! Nice placing!',
   'set.retry': 'Almost! Have another look and try again.',
   'set.done': 'All set! Great warm-up!',
 
@@ -170,7 +172,9 @@ export const ZH_TW = {
   'level.mine': '挖！',
   'level.skip': '跳過',
   'level.retry': '再試一次',
-  'level.correct': '挖到了！+{xp} 經驗',
+  'level.correct': '答對了！+{xp} 經驗',
+  'level.speed': '\u26A1速度 +{bonus}',
+  'level.streak': '連續答對 {n} 題！',
   'level.wrong': '差一點：答案是 {target}。-1 顆愛心',
   'level.skipped': '跳過了',
   'level.timeout': '轟！導火線燒完了。-1 顆愛心',
@@ -182,7 +186,7 @@ export const ZH_TW = {
   // Set-the-number level
   'set.check': '檢查',
   'set.progress': '第 {n} 關，共 {total} 關',
-  'set.correct': '答對了！',
+  'set.correct': '答對了！擺得真好！',
   'set.retry': '差一點！再看看，再試一次。',
   'set.done': '全部完成！暖身做得真好！',
 
