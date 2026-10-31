@@ -397,3 +397,24 @@ rt.zy-neu .zy-t { margin-bottom: -1px; }
 :root:lang(zh-TW) .play-area .level-feedback, :root:lang(zh-TW) .set-feedback, :root:lang(zh-TW) .set-progress { font-size: 1rem; line-height: 1.8; }
 :root:lang(zh-TW) .topbar .topbar-langbtn { font-size: .9rem; }
 :root:lang(zh-TW) .topbar .topbar-sound { font-size: 1.2rem; }
+
+/* ---------- Help in add/sub levels (issue #35) ----------
+   The button sits under the fuse. The panel takes the level's place and is the same grid as a
+   lesson (see css/tutorial.css): head (title + Close) on top, step / rule / feedback beside the
+   soroban, the controls full width under both on a phone. */
+/* Help shares the stopwatch's row (bottom right of the fuse), so it costs no height. */
+.play-top { position: relative; }
+.play-top .fuse__elapsed { display: flex; align-items: center; justify-content: center; min-height: 48px; }
+.play-help-btn { position: absolute; right: 0; bottom: 0; min-height: 48px; min-width: 96px; font-size: .75rem; }
+.play-help-btn[hidden], .play-help[hidden] { display: none; }
+.play-help-title { margin: 0; flex: 1 1 auto; min-width: 0; font: 400 .85rem/1.4 var(--font-pixel), var(--font-body); color: var(--gold); text-shadow: 2px 2px 0 var(--dirt-dark); overflow-wrap: anywhere; }
+.play-help-close { flex: 0 0 auto; min-height: 48px; min-width: 96px; font-size: .75rem; }
+.play-help-note { margin: 0; text-align: center; font: 400 .6rem/1.4 var(--font-pixel), var(--font-body); color: var(--readout-fg); }
+/* While Help is open the run's own heading and elapsed readout give way to the plan. */
+.screen-play:has(.play[data-help="open"]) .play-title { display: none; }
+.play[data-help="open"] .fuse__elapsed { display: none; }
+@media (prefers-color-scheme: light) {
+  .play-help-title { color: #7a4b00; text-shadow: none; }
+  .play-help-note { color: #1b5e20; }
+}
+:root:lang(zh-TW) .play-help-btn, :root:lang(zh-TW) .play-help-close { font-size: 1rem; }

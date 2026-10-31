@@ -6,6 +6,8 @@ import {
   submit,
   tick,
   skip,
+  help,
+  resume,
   speedBonus,
   starsFor,
   currentProblem,
@@ -239,4 +241,58 @@ for (const row of STAR_TABLE) {
 
 test('stars while still playing are 0', () => {
   assert.equal(starsFor(fresh(), { two: 0.7, three: 0.9 }), 0);
+});
+
+// ---- Help (issue #35) ----
+
+test('help: freezes the problem clock; resume shifts the start by the paused time (no timeout)', () => {
+  let s = fresh({ fuseMs: 10_000 });
+  s = reduce(s, help(T0 + 4_000));
+  assert.equal(s.helpSinceMs, T0 + 4_000);
+  // 5 minutes later nothing burns: tick/submit/skip are ignored while Help is open
+  assert.equal(reduce(s, tick(T0 + 300_000)), s);
+  assert.equal(reduce(s, submit(5, T0 + 300_000)), s);
+  assert.equal(reduce(s, skip(T0 + 300_000)), s);
+  s = reduce(s, resume(T0 + 304_000));
+  assert.equal(s.helpSinceMs, undefined);
+  assert.equal(s.problemStartMs, T0 + 300_000);
+  assert.equal(reduce(s, tick(T0 + 305_000)), s); // 5 s used of 10
+  assert.equal(reduce(s, tick(T0 + 310_000)).results[0]?.outcome, 'timeout'); // 10 s used
+});
+
+test('help: opening it costs no heart, and a correct answer after it earns base XP without speed bonus', () => {
+  let s = fresh();
+  s = reduce(s, help(T0 + 100));
+  assert.equal(s.hearts, 3);
+  s = reduce(s, resume(T0 + 1_100));
+  const r = reduce(s, submit(5, T0 + 1_200)); // fast: would earn nearly the full bonus
+  assert.equal(r.xp, DEFAULT_CONFIG.xpPerCorrect);
+  assert.deepEqual(r.results[0], { index: 0, outcome: 'correct', value: 5, ms: 200, xp: 10, helped: true });
+  assert.equal(r.hearts, 3);
+});
+
+test('help: a wrong answer after Help still costs a heart; the next problem is unhelped and gets its bonus', () => {
+  let s = fresh();
+  s = reduce(reduce(s, help(T0)), resume(T0 + 500));
+  s = reduce(s, submit(1, T0 + 600));
+  assert.equal(s.hearts, 2);
+  assert.equal(s.helped, undefined);
+  const next = reduce(s, submit(9, s.problemStartMs + 100));
+  assert.ok(next.xp - s.xp > DEFAULT_CONFIG.xpPerCorrect);
+  assert.equal(next.results[1]?.helped, undefined);
+});
+
+test('help: a normal run is unchanged (no helped/helpSinceMs keys appear)', () => {
+  const s = reduce(fresh(), submit(5, T0 + 100));
+  assert.equal('helped' in s, false);
+  assert.equal('helpSinceMs' in s, false);
+  assert.equal('helped' in (s.results[0] ?? {}), false);
+});
+
+test('help: resume without Help, help after the fuse burned, and help twice change nothing', () => {
+  const s = fresh({ fuseMs: 1_000 });
+  assert.equal(reduce(s, resume(T0 + 5)), s);
+  assert.equal(reduce(s, help(T0 + 2_000)), s);
+  const h = reduce(s, help(T0 + 10));
+  assert.equal(reduce(h, help(T0 + 20)), h);
 });

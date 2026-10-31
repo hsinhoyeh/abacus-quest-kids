@@ -51,6 +51,11 @@ body {
   .soroban-readout { font-size: 1.5rem; min-width: 6ch; padding: 8px 16px; }
   .play-area .soroban-readout { font-size: 1.5rem; }
   .soroban-clear { min-height: var(--tap); min-width: 160px; }
+  .play-top .fuse__elapsed { min-height: var(--tap); }
+  .play-help-btn { min-height: var(--tap); min-width: 140px; font-size: .85rem; }
+  .play-help-close { min-height: var(--tap); min-width: 140px; font-size: .85rem; }
+  .play-help-title { font-size: 1.2rem; }
+  .play-help-note { font-size: .8rem; }
 
   /* Level screens: hearts | problem | XP share one row to save height */
   .play-addsub .play-area {
@@ -148,7 +153,9 @@ body {
   .screen-play .play { display: grid; column-gap: 32px; row-gap: 12px; align-content: center; justify-items: center; }
   .screen-play .play-area { display: contents; margin: 0; }
   .screen-play .play-area[hidden] { display: none !important; }
-  .play-fuse { grid-area: fuse; width: 100%; }
+  .play-top { grid-area: fuse; width: 100%; }
+  .play-fuse { width: 100%; }
+  .play-help { grid-area: 3 / 1 / 8 / -1; width: 100%; }
   .fuse__track { margin: .25rem 0; }
   .fuse__elapsed { font-size: 1.4rem; }
   .fuse__count { font-size: 6rem; }

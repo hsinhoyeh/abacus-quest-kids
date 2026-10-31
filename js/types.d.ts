@@ -149,6 +149,8 @@ export interface ProblemResult {
   value: number | null;
   ms: number;
   xp: number;
+  /** Additive: present (true) only when Help was opened on this problem (no speed bonus). */
+  helped?: true;
 }
 
 export interface SessionState {
@@ -163,13 +165,19 @@ export interface SessionState {
   results: ProblemResult[];
   /** Injected-clock time the current problem was shown. */
   problemStartMs: number;
+  /** Additive: Help was opened on the current problem (it gets no speed bonus). */
+  helped?: boolean;
+  /** Additive: set while Help is open (time it opened); the problem's clock is frozen. */
+  helpSinceMs?: number;
   config: SessionConfig;
 }
 
 export type SessionEvent =
   | { type: 'submit'; value: number; nowMs: number }
   | { type: 'tick'; nowMs: number }
-  | { type: 'skip'; nowMs: number };
+  | { type: 'skip'; nowMs: number }
+  | { type: 'help'; nowMs: number }
+  | { type: 'resume'; nowMs: number };
 
 /** One soroban rod: heaven bead (0|1, worth 5) and earth beads pushed up (0..4, worth 1 each). */
 export interface Rod {

@@ -3,7 +3,7 @@
 // Time comes from the injected `now`; this module starts no timers. A fuse
 // (S7) drives timeouts by calling the returned `tick()`.
 
-import { createSession, reduce, submit, skip, tick, currentProblem, starsFor, totalMs } from '../core/session.js';
+import { createSession, reduce, submit, skip, tick, help, resume, currentProblem, starsFor, totalMs } from '../core/session.js';
 
 /** @typedef {import('../types.js').Problem} Problem */
 /** @typedef {import('../types.js').SorobanPort} SorobanPort */
@@ -40,6 +40,8 @@ import { createSession, reduce, submit, skip, tick, currentProblem, starsFor, to
  * @typedef {object} LevelScreen
  * @property {() => void} tick dispatch a tick at now() (fuse timeouts)
  * @property {() => SessionState} getState
+ * @property {() => Problem | null} beginHelp open Help on the current problem (freezes its clock, no bonus); null when not possible
+ * @property {() => void} endHelp close Help: resume the problem's clock and put the rods back as the kid left them
  * @property {() => void} destroy
  */
 
@@ -132,8 +134,9 @@ export function mount(opts) {
     heartsEl.textContent = '♥'.repeat(state.hearts);
     heartsEl.setAttribute('aria-label', fill(t.hearts, { n: state.hearts }));
     xpEl.textContent = fill(t.xp, { xp: state.xp });
-    mineBtn.disabled = !playing;
-    skipBtn.disabled = !playing;
+    const helping = state.helpSinceMs !== undefined;
+    mineBtn.disabled = !playing || helping;
+    skipBtn.disabled = !playing || helping;
     retryBtn.hidden = state.status !== 'over';
   };
 
@@ -218,9 +221,27 @@ export function mount(opts) {
   showProblem();
   render();
 
+  /** @type {number | null} rods as the kid left them when Help opened */
+  let savedRods = null;
+
   return {
     tick: () => dispatch(tick(now())),
     getState: () => state,
+    beginHelp() {
+      const prev = state;
+      state = reduce(state, help(now()));
+      if (state === prev) return null;
+      savedRods = port.getValue();
+      render();
+      return currentProblem(state);
+    },
+    endHelp() {
+      if (state.helpSinceMs === undefined) return;
+      state = reduce(state, resume(now()));
+      if (savedRods !== null) port.setValue(savedRods);
+      savedRods = null;
+      render();
+    },
     destroy: () => root.replaceChildren(),
   };
 }

@@ -140,3 +140,44 @@
   :root:lang(zh-TW) .lesson .tut-progress, :root:lang(zh-TW) .lesson .tut-mode { font-size: .9rem; }
   :root:lang(zh-TW) .lesson .lesson-to-map, :root:lang(zh-TW) .lesson-stage { font-size: .9rem; }
 }
+
+/* ---------- Help panel inside a level (js/play.js, issue #35) ----------
+   Same grid as .lesson: rule text beside the soroban, controls under both on a phone and in
+   the left column on a tablet. Clear is dropped (the plan has Undo / Replay). */
+.play-help {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; row-gap: 6px; align-content: start; margin-top: 2px;
+  grid-template-rows: auto auto auto auto auto 1fr auto;
+  grid-template-areas: "head head" "note note" "thead soroban" "text soroban" "feedback soroban" ". soroban" "controls controls";
+}
+.play-help-host.tut { display: contents; }
+.play-help-head { grid-area: head; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.play-help-note { grid-area: note; }
+.play-help .tut-head { grid-area: thead; flex-wrap: wrap; justify-content: flex-start; gap: 4px 8px; align-self: start; }
+.play-help .tut-text { grid-area: text; min-height: 0; padding: 8px; font-size: .65rem; line-height: 1.7; align-self: start; }
+.play-help .tut-controls { grid-area: controls; align-self: start; margin-top: 4px; gap: 8px; }
+.play-help .tut-controls .btn { min-height: 48px; padding: .3rem .2rem; font-size: .65rem; text-align: center; }
+.play-help .tut[data-mode="try"] .tut-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.play-help .tut[data-mode="try"] .tut-controls .tut-showme { grid-column: auto; }
+.play-help .tut-feedback { grid-area: feedback; min-height: 0; font-size: .65rem; line-height: 1.6; align-self: start; }
+.play-help .tut-feedback:empty { display: none; }
+.play-help .tut-soroban { grid-area: soroban; align-self: start; }
+.play-help .soroban-clear { display: none; }
+.play-help .soroban-readout { margin-bottom: 6px; padding: 0 10px; font-size: 1rem; line-height: 1.6; }
+:root:lang(zh-TW) .play-help .tut-text { font-size: .85rem; line-height: 1.9; padding: 6px; }
+:root:lang(zh-TW) .play-help .tut-feedback { font-size: .85rem; line-height: 1.9; }
+:root:lang(zh-TW) .play-help .tut-controls .btn { font-size: .8rem; line-height: 1.5; padding: .2rem .1rem; }
+:root:lang(zh-TW) .play-help .tut-progress, :root:lang(zh-TW) .play-help .tut-mode { font-size: .75rem; line-height: 1.8; }
+:root:lang(zh-TW) .play-help-title { font-size: .85rem; line-height: 1.8; }
+@media (min-width: 700px) {
+  .play-help { column-gap: 32px; row-gap: 10px; grid-template-rows: auto auto auto auto auto auto 1fr; grid-template-areas: "head soroban" "note soroban" "thead soroban" "text soroban" "controls soroban" "feedback soroban" ". soroban"; }
+  .play-help .tut-text { font-size: 1rem; padding: 14px 18px; }
+  .play-help .tut-feedback { font-size: 1rem; }
+  .play-help .tut-controls { gap: 12px; margin-top: 0; }
+  .play-help .tut-controls .btn { min-height: 56px; font-size: .8rem; }
+  .play-help .tut-progress { font-size: .8rem; }
+  .play-help .tut-mode { font-size: .7rem; }
+  .play-help .soroban-readout { margin-bottom: 8px; padding: 4px 14px; font-size: 1.5rem; }
+  :root:lang(zh-TW) .play-help .tut-text, :root:lang(zh-TW) .play-help .tut-feedback { font-size: 1.05rem; }
+  :root:lang(zh-TW) .play-help .tut-controls .btn { font-size: .9rem; padding: .3rem .2rem; }
+  :root:lang(zh-TW) .play-help .tut-progress, :root:lang(zh-TW) .play-help .tut-mode { font-size: .9rem; }
+}

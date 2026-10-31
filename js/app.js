@@ -255,6 +255,7 @@ export function startApp(env) {
           schedule: (cb, ms) => win.setTimeout(cb, ms),
           cancel: (id) => win.clearTimeout(id),
           strings: S.play,
+          ...(win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? { animMs: 0 } : {}),
           sound,
           onFinish: (run) => {
             const summary = finishRun(progress, pack, run);
