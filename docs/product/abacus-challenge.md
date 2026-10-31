@@ -97,7 +97,11 @@ abacus so that I train the real skill.
 As a learner, I want a timed "Creeper is coming!" mode so that I practice
 speed, not just correctness.
 **Acceptance criteria:**
+- [ ] A big **Start!** button kicks off a 3-2-1 countdown, then the timer
+      runs (the kid is highly motivated by timers, so this is core fun)
 - [ ] A visible fuse counts down per problem; reaching zero = a heart lost
+- [ ] Elapsed time is shown at the end of every level and the best time
+      per pack is saved
 - [ ] Faster correct answers earn bonus XP
 - [ ] The fuse length is per-pack, not a global constant
 - [ ] Per-problem time is recorded to the local play log
