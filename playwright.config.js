@@ -17,6 +17,8 @@ export default defineConfig({
     baseURL: `http://127.0.0.1:${PORT}/`,
     viewport: { width: 390, height: 844 },
     hasTouch: true,
+    // The app follows the browser language; pin it so the English specs are stable.
+    locale: 'en-US',
     // Start! pulses forever; reduced motion (supported by the CSS) keeps
     // elements stable for clicks and screenshots deterministic.
     reducedMotion: 'reduce',

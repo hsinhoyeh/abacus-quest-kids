@@ -71,3 +71,10 @@ test('widget: Clear button resets all rods to 0', () => {
   assert.equal(w.getValue(), 0);
   assert.ok(root(w).findAll('bead').every((b) => !b.classes.has('active')));
 });
+
+test('widget: bead aria-labels can be translated ({k} = earth bead number)', () => {
+  const w = createSorobanWidget(createStubDocument(), { rods: 1, heavenLabel: '上面的珠子', earthLabel: '下面的珠子 {k}' });
+  assert.equal(root(w).findAll('bead-heaven')[0]?.getAttribute('aria-label'), '上面的珠子');
+  assert.equal(root(w).findAll('bead-earth')[2]?.getAttribute('aria-label'), '下面的珠子 3');
+  assert.equal(mk(1).element && root(mk(1)).findAll('bead-earth')[0]?.getAttribute('aria-label'), 'earth bead 1');
+});

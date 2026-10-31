@@ -13,7 +13,7 @@ import { tapEarth, tapHeaven, value, fromNumber } from '../core/soroban.js';
 
 /**
  * @param {Document} doc
- * @param {{ rods?: number, clearLabel?: string }} [opts]
+ * @param {{ rods?: number, clearLabel?: string, heavenLabel?: string, earthLabel?: string }} [opts] earthLabel may contain {k}
  * @returns {SorobanWidget}
  */
 export function createSorobanWidget(doc, opts = {}) {
@@ -52,14 +52,14 @@ export function createSorobanWidget(doc, opts = {}) {
     const earthZone = el('div', 'rod-earth');
     const heaven = el('button', 'bead bead-heaven');
     heaven.setAttribute('type', 'button');
-    heaven.setAttribute('aria-label', 'heaven bead');
+    heaven.setAttribute('aria-label', opts.heavenLabel ?? 'heaven bead');
     heaven.addEventListener('click', () => update(i, tapHeaven));
     heavenZone.append(heaven);
     const row = [heaven];
     for (let k = 1; k <= 4; k++) {
       const b = el('button', 'bead bead-earth');
       b.setAttribute('type', 'button');
-      b.setAttribute('aria-label', `earth bead ${k}`);
+      b.setAttribute('aria-label', (opts.earthLabel ?? 'earth bead {k}').replace('{k}', String(k)));
       b.addEventListener('click', () => update(i, (r) => tapEarth(r, k)));
       earthZone.append(b);
       row.push(b);
