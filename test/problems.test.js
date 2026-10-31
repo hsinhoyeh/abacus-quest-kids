@@ -1,12 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { classify, createRng, generate } from '../js/core/problems.js';
+import { explain } from '../js/core/explain.js';
 
 /** @typedef {import('../js/types.js').StepKind} StepKind */
 
 /** @type {Array<[number, number, '+' | '-', StepKind]>} */
 const CLASSIFIER_TABLE = [
-  [2, 3, '+', 'plain'],
+  [2, 3, '+', 'complement5'],
+  [1, 4, '+', 'complement5'],
+  [2, 2, '+', 'plain'],
+  [6, 3, '+', 'plain'],
   [0, 4, '+', 'plain'],
   [3, 6, '+', 'plain'],
   [3, 4, '+', 'complement5'],
@@ -21,7 +25,9 @@ const CLASSIFIER_TABLE = [
   [99, 1, '+', 'complement10'],
   [9, 4, '-', 'plain'],
   [7, 2, '-', 'plain'],
-  [5, 3, '-', 'plain'],
+  [5, 3, '-', 'complement5'],
+  [5, 1, '-', 'complement5'],
+  [9, 7, '-', 'plain'],
   [6, 3, '-', 'complement5'],
   [8, 4, '-', 'complement5'],
   [12, 5, '-', 'borrow'],
@@ -114,4 +120,51 @@ test('generate rejects specs that cannot be satisfied', () => {
   assert.throws(() => generate({ rods: 2, allow: [], digits: 1, count: 1 }, createRng(1)));
   // borrow-only is unreachable on one rod, one digit.
   assert.throws(() => generate({ rods: 1, allow: ['borrow'], digits: 1, count: 1 }, createRng(1)));
+});
+
+/** Independent oracle: strongest explain step kind, in pack vocabulary. */
+/** @param {number} start @param {number} operand @param {'+' | '-'} op @returns {StepKind} */
+function explainKind(start, operand, op) {
+  const result = op === '+' ? start + operand : start - operand;
+  const rods = String(Math.max(start, operand, result)).length;
+  const kinds = new Set(explain({ start, op, operand, rods }).map((s) => s.kind));
+  if (kinds.has('borrow')) return 'borrow';
+  if (kinds.has('carry')) return 'complement10';
+  if (kinds.has('complement5')) return 'complement5';
+  return 'plain';
+}
+
+test('classify == explain-derived kind over all 1-2 digit start/operand pairs, both ops', () => {
+  let n = 0;
+  for (let start = 0; start <= 99; start++) {
+    for (let operand = 1; operand <= 99; operand++) {
+      for (const op of /** @type {const} */ (['+', '-'])) {
+        if (op === '-' && operand > start) continue;
+        assert.equal(classify(start, operand, op), explainKind(start, operand, op), `${start} ${op} ${operand}`);
+        n++;
+      }
+    }
+  }
+  assert.ok(n > 10000);
+});
+
+test('generated problems carry the explain-derived kind', () => {
+  for (const spec of Object.values(SAMPLES)) {
+    for (const p of generate({ ...spec, count: 300 }, createRng(11))) {
+      assert.equal(p.kind, explainKind(p.start, p.operand, p.op), JSON.stringify(p));
+    }
+  }
+});
+
+test('every shipped pack generates its count and emits every allowed kind', async () => {
+  const { PACKS } = await import('../js/packs/index.js');
+  assert.ok(PACKS.length > 0);
+  for (const pack of PACKS) {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const ps = generate(pack, createRng(seed + 1000));
+      assert.equal(ps.length, pack.count, pack.id);
+    }
+    const kinds = new Set(generate({ ...pack, count: 500 }, createRng(99)).map((p) => p.kind));
+    for (const k of pack.allow) assert.ok(kinds.has(k), `${pack.id} emits ${k}`);
+  }
 });
