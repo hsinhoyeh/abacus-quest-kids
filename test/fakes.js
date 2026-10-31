@@ -3,9 +3,12 @@
 /** @typedef {import('../js/types.js').SorobanPort} SorobanPort */
 /** @typedef {import('../js/types.js').StoragePort} StoragePort */
 
+/** @typedef {import('../js/types.js').BeadMove} BeadMove */
+/** @typedef {SorobanPort & { highlighted: BeadMove[], highlightCalls: BeadMove[][], clearCalls: number }} FakeSorobanPort */
+
 /**
  * @param {number} [rods] rod count; value must satisfy 0 <= v < 10^rods
- * @returns {SorobanPort}
+ * @returns {FakeSorobanPort}
  */
 export function createFakeSorobanPort(rods = 5) {
   const max = 10 ** rods;
@@ -18,6 +21,19 @@ export function createFakeSorobanPort(rods = 5) {
     for (const cb of [...listeners]) cb(value);
   };
   return {
+    /** Currently highlighted moves (test inspection). */
+    highlighted: /** @type {BeadMove[]} */ ([]),
+    highlightCalls: /** @type {BeadMove[][]} */ ([]),
+    clearCalls: 0,
+    highlight(moves) {
+      this.highlighted = [...moves];
+      this.highlightCalls.push([...moves]);
+    },
+    clearHighlight() {
+      this.highlighted = [];
+      this.clearCalls++;
+    },
+    rodValues: () => String(value).padStart(rods, '0').split('').map(Number),
     getValue: () => value,
     setValue(n) {
       if (!Number.isInteger(n) || n < 0 || n >= max) {
@@ -32,6 +48,34 @@ export function createFakeSorobanPort(rods = 5) {
         listeners.delete(cb);
       };
     },
+  };
+}
+
+/**
+ * Manual scheduler: nothing fires until a test calls run()/tick().
+ * @returns {{ after(ms: number, fn: () => void): () => void, run(): void, pending(): number, delays(): number[] }}
+ */
+export function createFakeScheduler() {
+  /** @type {Map<number, { ms: number, fn: () => void }>} */
+  const q = new Map();
+  let id = 0;
+  return {
+    after(ms, fn) {
+      const k = ++id;
+      q.set(k, { ms, fn });
+      return () => {
+        q.delete(k);
+      };
+    },
+    /** Fire everything queued right now (timers queued while running wait for the next run). */
+    run() {
+      const batch = [...q.entries()];
+      for (const [k, t] of batch) {
+        if (q.delete(k)) t.fn();
+      }
+    },
+    pending: () => q.size,
+    delays: () => [...q.values()].map((t) => t.ms),
   };
 }
 

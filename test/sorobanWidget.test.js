@@ -78,3 +78,39 @@ test('widget: bead aria-labels can be translated ({k} = earth bead number)', () 
   assert.equal(root(w).findAll('bead-earth')[2]?.getAttribute('aria-label'), '下面的珠子 3');
   assert.equal(mk(1).element && root(mk(1)).findAll('bead-earth')[0]?.getAttribute('aria-label'), 'earth bead 1');
 });
+
+test('widget: rodValues mirrors the beads', () => {
+  const w = mk(3);
+  root(w).findAll('bead-heaven')[2]?.dispatch('click'); // ones rod: 5
+  root(w).findAll('bead-earth')[4 * 2]?.dispatch('click'); // tens rod... index 8 = rod 2 bead 1
+  assert.deepEqual(w.rodValues?.(), [0, 0, 6]);
+});
+
+test('widget: highlight marks exactly the beads of the moves (heaven, explicit and implicit earth)', () => {
+  const w = mk(2);
+  w.setValue(13); // tens rod: earth 1 up; ones rod: earth 3 up
+  w.highlight?.([
+    { rod: 0, bead: 'earth', index: 1, dir: 'away' }, // explicit
+    { rod: 1, bead: 'heaven', dir: 'toBeam' },
+    { rod: 1, bead: 'earth', dir: 'away' }, // implicit: topmost active earth bead = 3
+  ]);
+  const lit = root(w).findAll('bead').filter((b) => b.classes.has('hint'));
+  assert.equal(lit.length, 3);
+  const earth = root(w).findAll('bead-earth');
+  const heaven = root(w).findAll('bead-heaven');
+  assert.ok(earth[0]?.classes.has('hint')); // rod 0, k=1
+  assert.ok(heaven[1]?.classes.has('hint'));
+  assert.ok(earth[4 + 2]?.classes.has('hint')); // rod 1, k=3
+  assert.ok(heaven[1]?.classes.has('hint-toBeam') || heaven[1]?.classes.has('hint-to-beam'));
+  assert.ok(earth[0]?.classes.has('hint-away'));
+  w.highlight?.([{ rod: 1, bead: 'earth', dir: 'toBeam' }]); // implicit: first inactive = 4
+  assert.equal(root(w).findAll('bead').filter((b) => b.classes.has('hint')).length, 1);
+  assert.ok(earth[4 + 3]?.classes.has('hint'));
+  w.clearHighlight?.();
+  assert.equal(root(w).findAll('bead').filter((b) => b.classes.has('hint')).length, 0);
+});
+
+test('widget: rods carry a place label (ones/tens/hundreds)', () => {
+  const w = createSorobanWidget(createStubDocument(), { rods: 3, placeLabels: ['ones', 'tens', 'hundreds'] });
+  assert.deepEqual(root(w).findAll('rod-label').map((l) => l.textContent), ['hundreds', 'tens', 'ones']);
+});

@@ -1,0 +1,80 @@
+/* Tutorial screen (js/ui/tutorialScreen.js) and bead highlight (sorobanWidget highlight()).
+   Imported from style.css; tablet/landscape rules live at the bottom of this file so they
+   win over the base rules above them without touching tablet.css. */
+
+/* ---------- Bead highlight: pulsing gold/white outline + arrow marker ---------- */
+.bead.hint {
+  z-index: 4;
+  outline: 4px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 7px var(--gold), 0 0 14px 8px rgba(245, 197, 66, .75), inset 4px 4px 0 rgba(255,255,255,.4), inset -4px -4px 0 rgba(0,0,0,.3);
+  animation: tut-pulse .9s steps(2, end) infinite alternate;
+}
+.bead.hint::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 0; height: 0; margin: -10px 0 0 -12px; pointer-events: none;
+  border-left: 12px solid transparent; border-right: 12px solid transparent;
+  filter: drop-shadow(2px 2px 0 #000);
+}
+.bead.hint[data-hint="down"]::after { border-top: 20px solid #fff; }
+.bead.hint[data-hint="up"]::after { border-bottom: 20px solid #fff; }
+@keyframes tut-pulse {
+  from { outline-color: #fff; box-shadow: 0 0 0 7px var(--gold), 0 0 6px 4px rgba(245, 197, 66, .5), inset 4px 4px 0 rgba(255,255,255,.4), inset -4px -4px 0 rgba(0,0,0,.3); }
+  to { outline-color: var(--gold); box-shadow: 0 0 0 7px #fff, 0 0 18px 10px rgba(255, 255, 255, .8), inset 4px 4px 0 rgba(255,255,255,.4), inset -4px -4px 0 rgba(0,0,0,.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bead.hint { animation: none; }
+}
+
+.rod-label { margin-top: 6px; font: 400 .5rem/1.2 var(--font-pixel), var(--font-body); color: var(--gold); text-shadow: 2px 2px 0 #000; text-align: center; position: relative; z-index: 1; max-width: 100%; overflow: hidden; white-space: nowrap; }
+
+/* ---------- Tutorial screen ---------- */
+.tut { display: flex; flex-direction: column; gap: 10px; align-items: stretch; padding: 8px 0; }
+.tut-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tut-progress { font: 400 .65rem/1.6 var(--font-pixel), var(--font-body); color: var(--gold); text-shadow: 2px 2px 0 var(--dirt-dark); }
+.tut-mode {
+  font: 400 .6rem/1.6 var(--font-pixel), var(--font-body); padding: 2px 10px; color: #fff; background: var(--lapis);
+  border: 3px solid var(--lapis-dark);
+}
+.tut[data-mode="try"] .tut-mode { background: var(--grass); border-color: var(--grass-dark); }
+.tut-text {
+  margin: 0; padding: 10px 12px; min-height: 5.2em; display: flex; align-items: center; justify-content: center;
+  font: 400 .8rem/1.7 var(--font-pixel), var(--font-body); color: var(--fg);
+  background: var(--panel-bg); border: var(--px) solid var(--panel-edge);
+  box-shadow: inset 3px 3px 0 var(--panel-hi), 0 var(--px) 0 var(--panel-edge);
+  overflow-wrap: anywhere;
+}
+.tut-soroban { display: flex; justify-content: center; }
+.tut-feedback { margin: 0; min-height: 2.6rem; font: 400 .8rem/1.6 var(--font-pixel), var(--font-body); color: var(--readout-fg); text-shadow: 2px 2px 0 #000; overflow-wrap: anywhere; }
+.tut-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tut-controls .btn { padding: .4rem .3rem; font-size: .65rem; }
+.tut-controls .btn { min-height: var(--tap, 48px); min-width: 44px; }
+.tut-controls .tut-yourturn, .tut-controls .tut-showme { grid-column: 1 / -1; }
+.tut-controls [hidden] { display: none !important; }
+@media (prefers-color-scheme: light) {
+  .tut-progress { color: #7a4b00; text-shadow: none; }
+  .tut-feedback { color: #1b5e20; text-shadow: none; }
+  .tut-text { color: #1d1d1d; }
+}
+
+/* ---------- iPad portrait / any width >= 600px ---------- */
+@media (min-width: 600px) {
+  .tut { gap: 14px; max-width: 760px; margin: 0 auto; }
+  .tut-progress { font-size: .8rem; }
+  .tut-mode { font-size: .7rem; }
+  .tut-text { font-size: 1rem; min-height: 4.6em; padding: 14px 18px; }
+  .tut-feedback { font-size: 1rem; }
+  .tut-controls { gap: 12px; }
+  .tut-controls .btn { min-height: 56px; font-size: .8rem; }
+  .rod-label { font-size: .6rem; }
+}
+
+/* ---------- Landscape tablets: soroban in the right column ---------- */
+@media (min-width: 700px) and (orientation: landscape) {
+  .tut { max-width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 32px; row-gap: 12px; align-content: center;
+    grid-template-rows: auto auto auto auto 1fr; grid-template-areas: "head soroban" "text soroban" "feedback soroban" "controls soroban" ". soroban"; }
+  .tut-head { grid-area: head; }
+  .tut-text { grid-area: text; min-height: 0; }
+  .tut-feedback { grid-area: feedback; min-height: 0; }
+  .tut-controls { grid-area: controls; align-self: start; }
+  .tut-soroban { grid-area: soroban; align-self: center; }
+}
