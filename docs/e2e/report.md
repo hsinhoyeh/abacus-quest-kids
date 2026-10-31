@@ -55,3 +55,31 @@ Chromium 390×844, real `localStorage`, nothing mocked (`test/e2e/zh-tw.spec.js`
 | – | Browser locale `zh-TW`, empty storage | defaults to 中文 with 注音 | – |
 
 Layout check (looked at both screenshots plus a 2x crop and the parent screen): 注音 sits in a vertical column to the right of each character with the tone mark beside it (neutral ˙ on top); no overlap and no clipping; buttons stay at least 48 px tall. Fixes made while looking: 注音 size raised to `max(.55em, 11px)` (was unreadably small at 8-9 px), Chinese button/heading font sizes raised (the pixel font is only used for Latin), and the missing 文 reading found by the e2e "every Han character has 注音" check was added (the language button label now lives in the string table so the coverage test sees it).
+
+## iPad layout (issue #24)
+Chromium with touch, real `localStorage`, `page.clock` for the fuse, `reducedMotion: 'reduce'`, nothing mocked (`test/e2e/ipad.spec.js`). The play-through is: picker, new player, map, a set-the-number level (8 targets by bead taps), result, an add/sub level with the fuse burning (`11s` left), one answer plus Mine!, parents. Screenshots are viewport-sized (what the kid sees without scrolling), not full page.
+
+| Viewport | Screens |
+|----------|---------|
+| Portrait 820×1180 | [picker](screenshots/19-ipad-portrait-1-picker.png) · [map](screenshots/19-ipad-portrait-2-map.png) · [set level](screenshots/19-ipad-portrait-3-set-level.png) · [result](screenshots/19-ipad-portrait-4-result.png) · [add/sub + fuse](screenshots/19-ipad-portrait-5-addsub-fuse.png) · [parent](screenshots/19-ipad-portrait-6-parent.png) |
+| Landscape 1180×820 | [picker](screenshots/20-ipad-landscape-1-picker.png) · [map](screenshots/20-ipad-landscape-2-map.png) · [set level](screenshots/20-ipad-landscape-3-set-level.png) · [result](screenshots/20-ipad-landscape-4-result.png) · [add/sub + fuse](screenshots/20-ipad-landscape-5-addsub-fuse.png) · [parent](screenshots/20-ipad-landscape-6-parent.png) |
+
+Asserted at each screen: `scrollWidth <= clientWidth` (no sideways scroll). On both level screens every bead button is at least 48×48 px, and Mine!/Skip/Check lie fully inside the viewport (landscape needs no vertical scrolling; also checked at 1024×768).
+
+**Defects found** (screenshots of 768×1024, 820×1180, 1024×768, 1180×820 taken before the fix, phone 390×844 as baseline):
+1. Everything sat in a 720 px column with phone-sized type: wide empty margins left and right, tiny pixel-font labels.
+2. The soroban was 130 px wide (44 px beads) in the middle of a 700 px panel: small targets and a lot of dead space.
+3. Landscape level screen was 960–1030 px tall in a 768/820 px viewport: Mine!/Skip/Check started at or below the fold, so the kid had to scroll with the beads in hand.
+4. Map was one long column of full-width cards (1380 px tall) with the cards stretched across the whole width.
+5. Result, picker and parent screens: small text and buttons lost in a wide panel; the parent list was a single column.
+6. No `viewport-fit=cover` / safe-area handling, and `min-height: 100vh` (taller than the visible area in iPad Safari).
+
+**Fixes** (`css/tablet.css`, loaded after `style.css`; nothing below 600 px changes except 0-value safe-area padding):
+- `html` font size and `--bead`, `--tap`, `--px` scale with the viewport at ≥ 600 px (`clamp()`); beads are 52–80 px (portrait) and follow the viewport height in landscape, always ≥ 48 px; rods spread across the frame.
+- Panel up to 960 px (1120 px in landscape); map depths in two columns; parent list in two columns at ≥ 900 px; bigger result stars, buttons and picker input.
+- Portrait add/sub: hearts | problem | XP on one row to save height.
+- Landscape (≥ 700 px): `.play` becomes a grid with the fuse, HUD, problem and Mine!/Skip (or progress, target and Check) in the left column and the soroban in a right column, vertically centred; the top bar collapses to one row; bead size derives from `100dvh` so seven bead rows + readout + Clear fit.
+- `100dvh`, `env(safe-area-inset-*)` and `viewport-fit=cover`.
+- 注音: `rt` size raised to `max(.6em, 13px)` on tablets; 中文 labels keep their larger sizes (checked at all four iPad viewports with 中文 selected; the taller 注音 top bar gets a slightly smaller bead budget in landscape, so on 1024×768 the footnote at the very bottom can still scroll, but Mine!/Check stay in view).
+
+Not verifiable here: real iPad Safari (rubber-banding, the address bar and home indicator, split view / Stage Manager window sizes). Chromium at the iPad CSS sizes is the proxy.
