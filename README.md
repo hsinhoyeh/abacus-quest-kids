@@ -23,7 +23,7 @@ npm run e2e         # Playwright happy path at 390x844 (once: npx playwright ins
 node scripts/serve.mjs   # serve the static site on http://127.0.0.1:4173/
 ```
 
-The e2e report with a screenshot per step is in [docs/e2e/report.md](docs/e2e/report.md).
+The e2e run writes a full-page screenshot per step to [docs/e2e/screenshots/](docs/e2e/screenshots/).
 
 ## Art & fonts
 
