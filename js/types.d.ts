@@ -162,3 +162,9 @@ export type SessionEvent =
   | { type: 'submit'; value: number; nowMs: number }
   | { type: 'tick'; nowMs: number }
   | { type: 'skip'; nowMs: number };
+
+/** One soroban rod: heaven bead (0|1, worth 5) and earth beads pushed up (0..4, worth 1 each). */
+export interface Rod {
+  heaven: 0 | 1;
+  earth: number;
+}

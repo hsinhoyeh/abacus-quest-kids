@@ -1,0 +1,44 @@
+/* Basic blocky look. Theme polish is a separate issue. */
+:root {
+  --bg: #2b2b2b;
+  --fg: #f2f2f2;
+  --stone: #8b8b8b;
+  --stone-dark: #5a5a5a;
+  --gold: #f5c542;
+  --gold-dark: #b8860b;
+  --wood: #6b4a2b;
+  --grass: #5fa83a;
+  --bead: 44px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 16px 8px; font: 18px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); text-align: center; }
+h1 { font-size: 1.5rem; margin: 0 0 12px; }
+.note { margin: 16px auto 0; max-width: 28em; }
+
+.level-target { font-size: 2rem; font-weight: bold; margin: 8px 0; }
+.level-feedback { min-height: 2.5rem; font-size: 1.8rem; font-weight: bold; color: var(--grass); }
+
+.soroban { display: inline-block; max-width: 100%; }
+.soroban-readout { font: bold 2rem monospace; background: #111; color: #7CFC00; border: 3px solid var(--stone-dark); padding: 4px 12px; margin-bottom: 8px; text-align: right; min-width: 5ch; }
+.soroban-frame { display: flex; justify-content: center; gap: 4px; background: var(--wood); border: 4px solid #3d2a18; padding: 6px 4px; }
+.rod { display: flex; flex-direction: column; align-items: center; width: calc(var(--bead) + 8px); position: relative; }
+.rod::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 6px; margin-left: -3px; background: #3d2a18; }
+.rod-heaven { display: flex; flex-direction: column; height: calc(var(--bead) * 2 + 4px); position: relative; }
+.rod-earth { display: flex; flex-direction: column; height: calc(var(--bead) * 5 + 4px); position: relative; }
+.beam { align-self: stretch; height: 8px; background: #2a1a0c; position: relative; z-index: 1; }
+
+.bead { position: relative; z-index: 2; width: var(--bead); height: var(--bead); min-height: 44px; min-width: 44px; padding: 0; margin: 0; border: 3px solid; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.bead-heaven { background: var(--gold); border-color: var(--gold-dark); }
+.bead-earth { background: var(--stone); border-color: var(--stone-dark); }
+/* Heaven: inactive at top, active slides down to the beam. */
+.rod-heaven { justify-content: flex-start; }
+.rod-heaven .bead.active { margin-top: auto; }
+/* Earth: active beads stack under the beam, inactive ones sit at the bottom. */
+.rod-earth { justify-content: flex-start; }
+.rod-earth .bead:first-child:not(.active),
+.rod-earth .bead.active + .bead:not(.active) { margin-top: auto; }
+.rod-earth .bead.active { box-shadow: inset 0 0 0 3px rgba(255,255,255,0.35); }
+.bead:focus-visible { outline: 3px solid #fff; outline-offset: 1px; }
+
+.soroban-clear { display: block; margin: 12px auto 0; min-width: 120px; min-height: 48px; font: bold 1.1rem system-ui, sans-serif; background: var(--stone); color: #111; border: 3px solid var(--stone-dark); cursor: pointer; touch-action: manipulation; }
+.soroban-clear:active { background: var(--stone-dark); color: #fff; }
