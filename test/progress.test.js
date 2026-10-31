@@ -85,8 +85,8 @@ test('no current player: mutations are no-ops, reads are empty', () => {
   assert.deepEqual(p.weeklyStats(), { sessions: 0, attempts: 0, correct: 0, accuracy: 0, medianMs: 0 });
 });
 
-test('unlock gate: default threshold is 6 stars', () => {
-  assert.equal(DEFAULT_UNLOCK_STARS, 6);
+test('unlock gate: default threshold is 4 stars (two good clears at a depth)', () => {
+  assert.equal(DEFAULT_UNLOCK_STARS, 4);
 });
 
 test('unlock gate: requirement 0 is open; single pack counts its best stars', () => {
@@ -106,13 +106,13 @@ test('unlock gate: with the pack list, stars sum over the required pack depth', 
   p.addPlayer('Mia');
   /** @param {string} id @param {number} depth @param {string} req @param {number} stars */
   const mk = (id, depth, req, stars) => /** @type {any} */ ({ id, depth, unlockRequires: { packId: req, stars } });
-  const packs = [mk('s1', 1, 'none', 0), mk('s2', 1, 's1', 0), mk('c1', 2, 's2', 6)];
+  const packs = [mk('s1', 1, 'none', 0), mk('s2', 1, 's1', 0), mk('c1', 2, 's2', 4)];
   const c1 = /** @type {any} */ (packs[2]);
-  p.recordStars('s1', 3);
+  p.recordStars('s1', 2);
+  p.recordStars('s2', 1);
+  assert.equal(p.isUnlocked(c1, packs), false, '3 < 4');
   p.recordStars('s2', 2);
-  assert.equal(p.isUnlocked(c1, packs), false, '5 < 6');
-  p.recordStars('s2', 3);
-  assert.equal(p.isUnlocked(c1, packs), true, '3 + 3 = 6');
+  assert.equal(p.isUnlocked(c1, packs), true, '2 + 2 = 4');
   assert.equal(p.isUnlocked(c1), false, 'without list only s2 counts');
 });
 

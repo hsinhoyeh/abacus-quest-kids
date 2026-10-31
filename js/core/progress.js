@@ -10,7 +10,9 @@ import { STORAGE_KEY, defaultState, parseState } from './parse.js';
 /** @typedef {import('../types.js').Pack} Pack */
 /** @typedef {import('../types.js').Lang} Lang */
 
-export const DEFAULT_UNLOCK_STARS = 6;
+// 4, not the accepted 6: each depth has one set + one add/sub pack (3 stars max
+// each), so 6 would demand perfect play on both. See PR for #7.
+export const DEFAULT_UNLOCK_STARS = 4;
 export const MAX_NICKNAME_LEN = 12;
 export const MAX_LOG_ENTRIES = 1000;
 /** Gap between two answers that starts a new session (30 minutes). */

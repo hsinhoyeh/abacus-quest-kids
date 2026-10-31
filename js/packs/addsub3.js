@@ -12,5 +12,5 @@ export default {
   digits: 1,
   count: 10,
   starRules: { two: 0.7, three: 0.9 },
-  unlockRequires: { packId: 'addsub-2', stars: 6 },
+  unlockRequires: { packId: 'addsub-2', stars: 4 },
 };

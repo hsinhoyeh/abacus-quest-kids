@@ -4,8 +4,8 @@ import { mount } from '../js/ui/mapScreen.js';
 import { createRoot } from './domStub.js';
 import { allByRole, makeProgress, pack } from './helpers.screens.js';
 
-// Two surface packs, one cave pack gated at 6 stars on the surface depth.
-const PACKS = [pack('s1', 1), pack('s2', 1), pack('c1', 2, 's1', 6), pack('d1', 3, 'c1', 6)];
+// Two surface packs, one cave pack gated at 4 stars on the surface depth.
+const PACKS = [pack('s1', 1), pack('s2', 1), pack('c1', 2, 's1', 4), pack('d1', 3, 'c1', 4)];
 
 function setup() {
   const { progress } = makeProgress();
@@ -45,16 +45,16 @@ test('locked pack is disabled, marked locked, shows the requirement, and never s
   c1?.click();
   assert.deepEqual(picked, []);
   const need = allByRole(/** @type {any} */ (c1), 'requirement')[0];
-  assert.ok(/6/.test(need?.textContent ?? ''));
+  assert.ok(/4/.test(need?.textContent ?? ''));
   assert.ok(/Surface/.test(need?.textContent ?? ''));
 });
 
-test('6-star rule sums best stars over the depth: two 3-star surface packs unlock the cave', () => {
+test('4-star rule sums best stars over the depth: 3 + 1 surface stars unlock the cave', () => {
   const { node, progress, screen } = setup();
   progress.recordStars('s1', 3);
   screen.refresh();
   assert.equal(node('c1')?.getAttribute('data-locked'), 'true');
-  progress.recordStars('s2', 3);
+  progress.recordStars('s2', 1);
   screen.refresh();
   assert.equal(node('c1')?.getAttribute('data-locked'), 'false');
   assert.equal(node('c1')?.disabled, false);
