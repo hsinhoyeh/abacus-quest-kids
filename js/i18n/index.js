@@ -99,7 +99,8 @@ export function screenStrings(raw) {
     result: pick('result', ['doneTitle', 'overTitle', 'xp', 'time', 'starsLabel', 'newRecord', 'retry', 'next']),
     play: {
       fuse: { start: raw('fuse.start'), elapsed: raw('fuse.elapsed'), record: raw('fuse.record') },
-      level: pick('level', ['mine', 'skip', 'retry', 'correct', 'speed', 'streak', 'wrong', 'skipped', 'timeout', 'over', 'done', 'hearts', 'xp']),
+      level: pick('level', ['mine', 'skip', 'retry', 'correct', 'speed', 'streak', 'wrong', 'skipped', 'timeout', 'over', 'done', 'hearts', 'xp', 'help', 'helpClose', 'helpTitle', 'helpNote']),
+      tutorial,
       set: pick('set', ['check', 'progress', 'correct', 'retry', 'done']),
       clear: raw('soroban.clear'),
       heaven: raw('soroban.heaven'),

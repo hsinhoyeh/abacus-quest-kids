@@ -38,6 +38,20 @@ export const tick = (nowMs) => ({ type: 'tick', nowMs });
 export const skip = (nowMs) => ({ type: 'skip', nowMs });
 
 /**
+ * Help opened on the current problem: freezes its clock and forfeits its speed bonus.
+ * @param {number} nowMs
+ * @returns {SessionEvent}
+ */
+export const help = (nowMs) => ({ type: 'help', nowMs });
+
+/**
+ * Help closed: the problem's clock resumes where it stopped (the paused time is not counted).
+ * @param {number} nowMs
+ * @returns {SessionEvent}
+ */
+export const resume = (nowMs) => ({ type: 'resume', nowMs });
+
+/**
  * @param {readonly Problem[]} problems
  * @param {number} nowMs time the first problem is shown
  * @param {Partial<SessionConfig>} [config]
@@ -99,13 +113,17 @@ export function speedBonus(ms, windowMs, max) {
 function settle(s, outcome, value, ms, nowMs) {
   const ok = outcome === 'correct';
   const window = s.config.fuseMs ?? s.config.bonusWindowMs;
-  const gained = ok ? s.config.xpPerCorrect + speedBonus(ms, window, s.config.maxSpeedBonus) : 0;
+  const helped = s.helped === true;
+  const bonus = helped ? 0 : speedBonus(ms, window, s.config.maxSpeedBonus);
+  const gained = ok ? s.config.xpPerCorrect + bonus : 0;
   const lose = outcome === 'wrong' || outcome === 'timeout';
   const hearts = lose ? Math.max(0, s.hearts - 1) : s.hearts;
   const streak = ok ? s.streak + 1 : 0;
   const index = s.index + 1;
+  // Help is per problem: the flag and any open pause do not carry over.
+  const { helped: _helped, helpSinceMs: _since, ...rest } = s;
   return {
-    ...s,
+    ...rest,
     status: hearts === 0 ? 'over' : index >= s.problems.length ? 'done' : 'playing',
     index,
     hearts,
@@ -113,7 +131,7 @@ function settle(s, outcome, value, ms, nowMs) {
     streak,
     bestStreak: Math.max(s.bestStreak, streak),
     correct: s.correct + (ok ? 1 : 0),
-    results: [...s.results, { index: s.index, outcome, value, ms, xp: gained }],
+    results: [...s.results, { index: s.index, outcome, value, ms, xp: gained, ...(helped ? { helped: true } : {}) }],
     problemStartMs: nowMs,
   };
 }
@@ -128,8 +146,17 @@ export function reduce(state, event) {
   if (!problem) return state;
   const elapsed = Math.max(0, event.nowMs - state.problemStartMs);
   const fuse = state.config.fuseMs;
+  if (event.type === 'resume') {
+    if (state.helpSinceMs === undefined) return state;
+    const { helpSinceMs, ...rest } = state;
+    return { ...rest, problemStartMs: state.problemStartMs + Math.max(0, event.nowMs - helpSinceMs) };
+  }
+  // While Help is open nothing else counts: no answer, skip or timeout.
+  if (state.helpSinceMs !== undefined) return state;
   const burned = fuse !== undefined && elapsed >= fuse;
   switch (event.type) {
+    case 'help':
+      return burned ? state : { ...state, helped: true, helpSinceMs: event.nowMs };
     case 'tick':
       return burned && fuse !== undefined ? settle(state, 'timeout', null, fuse, event.nowMs) : state;
     case 'submit':

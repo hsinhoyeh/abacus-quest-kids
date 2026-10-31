@@ -123,3 +123,23 @@ Chromium with touch, real `localStorage`, real bead taps, nothing mocked, no clo
 6. Logic: a correct complement-5 move done heaven-bead first (3 + 4: 3 → 8 → 7) showed a "wrong" hint, because only values between the step's start and end counted as part-way. Any value the step's own moves can reach on that rod now waits quietly.
 
 Not verifiable here: real iPad Safari and a real finger on the 44 px beads.
+
+## Help button (issue #35)
+Chromium with touch, real `localStorage`, real bead taps (`test/e2e/help.spec.js`). Playwright's clock is frozen from the first line (so the problem generator's seed is fixed and the fuse can be watched), and progress is seeded through `localStorage` so the borrow pack (Mine: borrow, `addsub-3`) is open. The test skips (free of hearts) until the displayed problem needs a borrow, parks the rods on an odd value, then presses **Help**. Screenshots are viewport-sized.
+
+| Step | Asserted | Screenshot |
+|------|----------|-----------|
+| Level with the Help button | Help is at least 44 px (48 on a tablet), fully inside the viewport, no sideways scroll | [phone](screenshots/25-help-phone-button.png) · [portrait](screenshots/25-help-ipad-portrait-button.png) · [landscape](screenshots/25-help-ipad-landscape-button.png) |
+| Help open on a borrow problem | plan for this problem ("Borrow 1 from the tens"), title "50 - 4", "No speed bonus on this one.", still on the play screen, Mine!/Skip hidden, the fuse stays on the same seconds and the stopwatch does not move while the clock runs 60 s, hearts still 3, Back to the game / Next / Your turn at least 44 px and in view | [phone](screenshots/25-help-phone-open.png) · [portrait](screenshots/25-help-ipad-portrait-open.png) · [landscape](screenshots/25-help-ipad-landscape-open.png) |
+| Next step in the plan | "Step 2 of 2" | [phone](screenshots/25-help-phone-step2.png) |
+| Back to the game | level is back, the rods show exactly what the kid left, hearts 3, the fuse resumes with the time it had left and the stopwatch moves on by 1 s after 1 s | [phone](screenshots/25-help-phone-closed.png) |
+| Correct answer after Help | "Correct! +10 XP" with no speed bonus (an unhelped, instant answer would add up to +10), XP 10, hearts 3; the saved play log has the same fields as before and the helped problem's time excludes the minute spent in Help | – |
+| 中文 + 注音 | button 幫助 carries its 注音, the plan is in Chinese, no sideways scroll | [open](screenshots/25-help-zh-open.png) |
+| Set-the-number level | no Help button | – |
+
+**Defects found and fixed while looking at the screenshots**
+1. Phone: the plan's controls fell below the fold (fuse + plan + 7-row soroban is taller than 844 px). The panel reuses the lesson grid (rule text beside the soroban, controls full width under both), Close sits in the head at the top, and the level's heading, the elapsed readout and the Clear button give way while Help is open.
+2. iPad landscape: the panel was a single column and ran 130 px past the viewport. It now uses the lesson's two-column grid (text and controls left, soroban right).
+3. The `−` sign is missing from the pixel font, so the title uses `-`.
+
+Not verifiable here: real iPad Safari and a real finger.

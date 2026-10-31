@@ -4,6 +4,7 @@
 // This is the app edge: the only place that schedules frames. Time comes
 // from the injected clock (performance.now in the browser).
 
+import { explain } from './core/explain.js';
 import { createFuse } from './core/fuse.js';
 import { createRng, generate } from './core/problems.js';
 import { starsFor } from './core/session.js';
@@ -12,6 +13,8 @@ import { createFuseWidget } from './ui/fuseWidget.js';
 import { mount as mountLevel } from './ui/levelScreen.js';
 import { mount as mountSet } from './ui/setNumberScreen.js';
 import { createSorobanWidget } from './ui/sorobanWidget.js';
+import { createHelp } from './help.js';
+import { mount as mountTutorial } from './ui/tutorialScreen.js';
 import { createRunEnd, levelCelebrates } from './runEnd.js';
 import { fuseMsFor, logAnswer, setXp, starsForAccuracy } from './run.js';
 
@@ -27,6 +30,7 @@ const NO_FUSE_MS = Number.MAX_SAFE_INTEGER;
  * @property {Partial<Record<string, string>>} [fuse] fuseWidget strings
  * @property {Partial<Record<string, string>>} [level] levelScreen strings
  * @property {Partial<Record<string, string>>} [set] setNumberScreen strings
+ * @property {Record<string, string>} [tutorial] `tut.*` strings for the Help plan
  * @property {string} [clear] soroban Clear button
  * @property {string} [heaven] soroban heaven bead aria-label
  * @property {string} [earth] soroban earth bead aria-label template ({k})
@@ -46,6 +50,7 @@ const NO_FUSE_MS = Number.MAX_SAFE_INTEGER;
  * @property {(cb: () => void, ms: number) => number} schedule setTimeout-like; delays the result after a correct final answer
  * @property {(id: number) => void} cancel clearTimeout-like
  * @property {PlayStrings} [strings]
+ * @property {number} [animMs] tutorial animation delay for the Help plan (0 = apply each step at once)
  * @property {{ onCorrect(e: { streak: number }): void }} [sound] positive-only sound events
  */
 
@@ -65,7 +70,16 @@ export function mountPlay(opts) {
     return e;
   };
   const wrap = div('div', `play play-${timed ? 'addsub' : 'set'}`);
+  const top = div('div', 'play-top');
   const fuseRoot = div('div', timed ? 'play-fuse' : 'play-fuse fuse--stopwatch');
+  top.append(fuseRoot);
+  const lv = opts.strings?.level ?? {};
+  const helpText = {
+    help: lv['help'] ?? 'Help',
+    close: lv['helpClose'] ?? 'Back to the game',
+    title: lv['helpTitle'] ?? 'How to solve {problem}',
+    note: lv['helpNote'] ?? 'No speed bonus on this one.',
+  };
   const area = div('div', 'play-area');
   area.hidden = true;
   const screenRoot = div('div', 'play-screen');
@@ -76,7 +90,17 @@ export function mountPlay(opts) {
     ...(opts.strings?.earth ? { earthLabel: opts.strings.earth } : {}),
   });
   area.append(screenRoot, soroban.element);
-  wrap.append(fuseRoot, area);
+  // Help (add/sub only): a button under the fuse and a panel that takes the place of the level.
+  const helpBtn = /** @type {HTMLButtonElement} */ (div('button', 'btn btn-info play-help-btn'));
+  helpBtn.type = 'button';
+  helpBtn.textContent = helpText.help;
+  helpBtn.setAttribute('data-role', 'help');
+  helpBtn.hidden = true;
+  const helpPanel = div('div', 'play-help');
+  helpPanel.setAttribute('data-role', 'help-panel');
+  helpPanel.hidden = true;
+  if (timed) top.append(helpBtn);
+  wrap.append(top, area, helpPanel);
   root.replaceChildren(wrap);
 
   let frameId = 0;
@@ -117,6 +141,7 @@ export function mountPlay(opts) {
   /** Mount the run when the kick-off reaches "go" (so 3-2-1 eats no fuse). */
   function begin() {
     area.hidden = false;
+    helpBtn.hidden = !timed;
     seen = 0;
     seenCorrect = 0;
     setStreak = 0;
@@ -162,6 +187,76 @@ export function mountPlay(opts) {
     },
   });
 
+  /** @type {ReturnType<typeof mountTutorial> | null} */
+  let helpTut = null;
+  /** Help's own read-only-to-the-run soroban: the kid's rods are never touched by the plan. */
+  const helpView = {
+    /** @param {import('./types.js').Problem} p */
+    show(p) {
+      const plan = explain({ start: p.start, op: p.op, operand: p.operand, rods: pack.rods });
+      const second = createSorobanWidget(doc, {
+        rods: pack.rods,
+        ...(opts.strings?.clear ? { clearLabel: opts.strings.clear } : {}),
+        ...(opts.strings?.heaven ? { heavenLabel: opts.strings.heaven } : {}),
+        ...(opts.strings?.earth ? { earthLabel: opts.strings.earth } : {}),
+      });
+      const title = div('h2', 'play-help-title');
+      title.textContent = helpText.title.replace('{problem}', `${p.start}\u00a0${p.op === '+' ? '+' : '-'}\u00a0${p.operand}`);
+      const note = div('p', 'play-help-note');
+      note.textContent = helpText.note;
+      const host = div('div', 'play-help-host');
+      const close = div('button', 'btn btn-primary play-help-close');
+      close.setAttribute('type', 'button');
+      close.setAttribute('data-role', 'help-close');
+      close.textContent = helpText.close;
+      close.addEventListener('click', () => help.close());
+      const head = div('div', 'play-help-head');
+      head.append(title, close);
+      helpPanel.replaceChildren(head, note, host);
+      helpTut = mountTutorial({
+        root: host,
+        port: second,
+        plan,
+        now: clock,
+        onDone: () => {},
+        scheduler: {
+          after(ms, fn) {
+            const id = opts.schedule(fn, ms);
+            return () => opts.cancel(id);
+          },
+        },
+        ...(opts.strings?.tutorial ? { strings: opts.strings.tutorial } : {}),
+        ...(opts.animMs !== undefined ? { animMs: opts.animMs } : {}),
+      });
+      area.hidden = true;
+      helpBtn.hidden = true;
+      helpPanel.hidden = false;
+      wrap.setAttribute('data-help', 'open');
+    },
+    hide() {
+      helpTut?.destroy();
+      helpTut = null;
+      helpPanel.replaceChildren();
+      helpPanel.hidden = true;
+      area.hidden = false;
+      helpBtn.hidden = false;
+      wrap.removeAttribute('data-help');
+      widget.render(fuse.snapshot());
+    },
+  };
+  /** @type {ReturnType<typeof createHelp> | null} */
+  let helpFlow = null;
+  const help = {
+    open() {
+      if (!helpFlow && level) helpFlow = createHelp({ fuse, level, view: helpView });
+      if (helpFlow?.open()) widget.render(fuse.snapshot());
+    },
+    close() {
+      helpFlow?.close();
+    },
+  };
+  helpBtn.addEventListener('click', () => help.open());
+
   /**
    * @param {{ status: 'done' | 'over', stars: number, xp: number }} run
    * @param {boolean} celebrate hold the level screen briefly (correct final answer)
@@ -170,6 +265,8 @@ export function mountPlay(opts) {
     finished = true; // no more settle/frame work: no heart can be lost, no double submit
     if (frameId !== 0) opts.cancelFrame(frameId);
     frameId = 0;
+    help.close();
+    helpBtn.hidden = true;
     runEnd.end(run, celebrate);
   }
 
@@ -236,6 +333,7 @@ export function mountPlay(opts) {
       frameId = 0;
       finished = true;
       runEnd.destroy();
+      helpTut?.destroy();
       fuse.stop();
       widget.destroy();
       level?.destroy();

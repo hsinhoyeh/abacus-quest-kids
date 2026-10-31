@@ -88,6 +88,10 @@ export const EN = {
   'level.done': 'Level cleared!',
   'level.hearts': '{n} hearts',
   'level.xp': 'XP {xp}',
+  'level.help': 'Help',
+  'level.helpClose': 'Back to the game',
+  'level.helpTitle': 'How to solve {problem}',
+  'level.helpNote': 'No speed bonus on this one.',
 
   // Set-the-number level
   'set.check': 'Check',
@@ -253,6 +257,10 @@ export const ZH_TW = {
   'level.done': '過關了！',
   'level.hearts': '{n} 顆愛心',
   'level.xp': '經驗 {xp}',
+  'level.help': '幫助',
+  'level.helpClose': '回到遊戲',
+  'level.helpTitle': '{problem} 的做法',
+  'level.helpNote': '這題沒有速度加成。',
 
   // Set-the-number level
   'set.check': '檢查',
