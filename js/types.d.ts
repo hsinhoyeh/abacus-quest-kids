@@ -116,3 +116,49 @@ export interface FuseOptions {
   /** Fires exactly once per armed fuse; the caller dispatches a timeout. */
   onExpire?: () => void;
 }
+
+// ---- Session (S5, core/session.js) ----
+
+export type SessionStatus = 'playing' | 'over' | 'done';
+export type ProblemOutcome = 'correct' | 'wrong' | 'skip' | 'timeout';
+
+/** Tunable run numbers; defaults live in session.js DEFAULT_CONFIG. */
+export interface SessionConfig {
+  hearts: number;
+  xpPerCorrect: number;
+  /** Max extra XP for an instant correct answer; decays to 0 over the bonus window. */
+  maxSpeedBonus: number;
+  /** Bonus window when there is no fuse. */
+  bonusWindowMs: number;
+  /** Optional per-problem deadline (Creeper fuse); reaching it costs a heart. */
+  fuseMs?: number;
+}
+
+export interface ProblemResult {
+  index: number;
+  outcome: ProblemOutcome;
+  /** Rod value at submit time; null for skip/timeout. */
+  value: number | null;
+  ms: number;
+  xp: number;
+}
+
+export interface SessionState {
+  status: SessionStatus;
+  problems: readonly Problem[];
+  index: number;
+  hearts: number;
+  xp: number;
+  streak: number;
+  bestStreak: number;
+  correct: number;
+  results: ProblemResult[];
+  /** Injected-clock time the current problem was shown. */
+  problemStartMs: number;
+  config: SessionConfig;
+}
+
+export type SessionEvent =
+  | { type: 'submit'; value: number; nowMs: number }
+  | { type: 'tick'; nowMs: number }
+  | { type: 'skip'; nowMs: number };
