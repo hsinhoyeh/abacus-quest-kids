@@ -180,3 +180,44 @@ export interface ResultSummary {
   ms: number;
   newRecord: boolean;
 }
+
+// ---- Tutorial explain engine (core/explain.js) ----
+// See docs/architecture/tutorial-mode.md. `StepKind` above is the problem
+// generator's classification, so the tutorial step kind is `PlanStepKind`.
+
+/** How a step moves beads: plain, 5-complement, 進位 carry, or 借位 borrow. */
+export type PlanStepKind = 'direct' | 'complement5' | 'carry' | 'borrow';
+
+/**
+ * One single-bead move. `rod` indexes the rods array (0 = leftmost, most
+ * significant). Earth `index` is 1..4 (1 = nearest the beam, as in tapEarth):
+ * `toBeam` uses index earth+1, `away` uses index earth. Heaven has no index.
+ */
+export interface BeadMove {
+  rod: number;
+  bead: 'heaven' | 'earth';
+  index?: number;
+  dir: 'toBeam' | 'away';
+}
+
+/** One explained step; all its moves are on `rod`. before/after are the whole number. */
+export interface Step {
+  rod: number;
+  kind: PlanStepKind;
+  moves: BeadMove[];
+  before: number;
+  after: number;
+  /** Stable i18n key, one of explain.js KEYS. */
+  key: string;
+  params: Record<string, number>;
+}
+
+export type Plan = Step[];
+
+export interface ExplainInput {
+  start: number;
+  op: '+' | '-';
+  operand: number;
+  /** Number of rods; start and result must be in [0, 10^rods). */
+  rods: number;
+}
