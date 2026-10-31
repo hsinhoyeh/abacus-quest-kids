@@ -55,6 +55,7 @@ const STRINGS = {
   over: 'Out of hearts! Try again?',
   done: 'Level cleared!',
   hearts: '{n} hearts',
+  xp: 'XP {xp}',
 };
 
 /** @type {StarRules} */
@@ -121,7 +122,7 @@ export function mount(opts) {
     problemEl.textContent = p ? problemLabel(p) : '';
     heartsEl.textContent = '♥'.repeat(state.hearts);
     heartsEl.setAttribute('aria-label', fill(t.hearts, { n: state.hearts }));
-    xpEl.textContent = `XP ${state.xp}`;
+    xpEl.textContent = fill(t.xp, { xp: state.xp });
     mineBtn.disabled = !playing;
     skipBtn.disabled = !playing;
     retryBtn.hidden = state.status !== 'over';

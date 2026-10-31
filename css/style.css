@@ -338,3 +338,36 @@ img, canvas, svg { max-width: 100%; image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- Language switch (js/app.js) ---------- */
+.topbar-lang { display: inline-flex; gap: 0; }
+.topbar-lang .btn { min-width: var(--tap); padding: .4rem .6rem; }
+.topbar-lang .btn:first-child { border-right-width: 2px; }
+.topbar-lang .btn:last-child { border-left-width: 2px; }
+.topbar-lang .btn[aria-pressed="true"] { background: var(--gold); color: var(--on-accent); text-shadow: none; }
+
+/* ---------- 注音 (js/i18n/annotator.js): vertical column to the RIGHT of the character ----------
+   <ruby class="zy"><span class="zy-c">字</span><rt class="zy-rt"><span class="zy-b">ㄗ</span><span class="zy-t">ˋ</span></rt></ruby>
+   ruby/rt are turned into a flex row so the reading sits beside, not above, the
+   character. The tone mark goes beside the column (neutral ˙ on top). */
+ruby.zy { display: inline-flex; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 .12em 0 0; text-shadow: none; }
+.zy-c { display: inline-block; }
+rt.zy-rt {
+  display: inline-flex; align-items: center; margin-left: 1px;
+  font: 700 max(.55em, 11px)/1 var(--font-body); letter-spacing: 0; text-shadow: none; user-select: none;
+}
+rt.zy-neu { flex-direction: column; }
+.zy-b { writing-mode: vertical-lr; text-orientation: upright; line-height: .95; }
+.zy-t { font-size: .8em; line-height: 1; }
+rt.zy-neu .zy-t { margin-bottom: -1px; }
+.zy-p { white-space: pre-wrap; }
+/* Chinese is set in a CJK face, so it can be larger than the wide pixel-font Latin. */
+:root:lang(zh-TW) body { line-height: 1.5; }
+:root:lang(zh-TW) .btn, :root:lang(zh-TW) :is(.picker-add, .picker-player, .level-mine, .level-skip, .level-retry, .set-check, .result-retry, .result-next, .map-pack) { font-size: 1rem; }
+:root:lang(zh-TW) .topbar .btn { font-size: .85rem; }
+:root:lang(zh-TW) .topbar .pill, :root:lang(zh-TW) .level-xp { font-size: .85rem; }
+:root:lang(zh-TW) .topbar-brand { font-size: 1.1rem; }
+:root:lang(zh-TW) h1, :root:lang(zh-TW) h2 { font-size: 1.25rem; line-height: 1.7; }
+:root:lang(zh-TW) .map-requirement, :root:lang(zh-TW) .map-best, :root:lang(zh-TW) .map-lock { font-size: 1rem; line-height: 1.7; }
+:root:lang(zh-TW) .play-area .level-feedback, :root:lang(zh-TW) .set-feedback, :root:lang(zh-TW) .set-progress { font-size: 1rem; line-height: 1.8; }
+:root:lang(zh-TW) .topbar .topbar-langbtn { font-size: .9rem; }

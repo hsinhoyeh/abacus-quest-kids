@@ -27,6 +27,8 @@ const NO_FUSE_MS = Number.MAX_SAFE_INTEGER;
  * @property {Partial<Record<string, string>>} [level] levelScreen strings
  * @property {Partial<Record<string, string>>} [set] setNumberScreen strings
  * @property {string} [clear] soroban Clear button
+ * @property {string} [heaven] soroban heaven bead aria-label
+ * @property {string} [earth] soroban earth bead aria-label template ({k})
  */
 
 /**
@@ -63,7 +65,12 @@ export function mountPlay(opts) {
   const area = div('div', 'play-area');
   area.hidden = true;
   const screenRoot = div('div', 'play-screen');
-  const soroban = createSorobanWidget(doc, { rods: pack.rods, ...(opts.strings?.clear ? { clearLabel: opts.strings.clear } : {}) });
+  const soroban = createSorobanWidget(doc, {
+    rods: pack.rods,
+    ...(opts.strings?.clear ? { clearLabel: opts.strings.clear } : {}),
+    ...(opts.strings?.heaven ? { heavenLabel: opts.strings.heaven } : {}),
+    ...(opts.strings?.earth ? { earthLabel: opts.strings.earth } : {}),
+  });
   area.append(screenRoot, soroban.element);
   wrap.append(fuseRoot, area);
   root.replaceChildren(wrap);

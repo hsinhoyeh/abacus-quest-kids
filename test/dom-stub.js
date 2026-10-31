@@ -12,7 +12,7 @@ export class StubElement {
     this.listeners = {};
     /** @type {Set<string>} */
     this.classes = new Set();
-    this.textContent = '';
+    this._text = '';
     this.className = '';
     this.disabled = false;
     this.style = { setProperty: (/** @type {string} */ _k, /** @type {string} */ _v) => {} };
@@ -29,9 +29,26 @@ export class StubElement {
       contains: (/** @type {string} */ c) => self.classes.has(c),
     };
   }
+  /** Like the DOM: reading joins descendants' text, writing drops the children. @returns {string} */
+  get textContent() {
+    return this.children.length ? this.children.map((c) => c.textContent).join('') : this._text;
+  }
+  set textContent(v) {
+    this.children = [];
+    this._text = String(v);
+  }
   /** @param {StubElement[]} nodes */
   append(...nodes) {
     this.children.push(...nodes);
+  }
+  /** @param {StubElement[]} nodes */
+  replaceChildren(...nodes) {
+    this.children = [...nodes];
+    this._text = '';
+  }
+  /** @param {string} k */
+  removeAttribute(k) {
+    delete this.attributes[k];
   }
   /** @param {string} k @param {string} v */
   setAttribute(k, v) {
@@ -48,6 +65,14 @@ export class StubElement {
   /** @param {string} type */
   dispatch(type) {
     for (const cb of this.listeners[type] ?? []) cb({ type, preventDefault() {} });
+  }
+  /** Convenience for tests: depth-first search by tag name. @param {string} tag @returns {StubElement[]} */
+  findByTag(tag) {
+    /** @type {StubElement[]} */
+    const out = [];
+    if (this.tagName === tag.toUpperCase()) out.push(/** @type {StubElement} */ (/** @type {unknown} */ (this)));
+    for (const c of this.children) out.push(...c.findByTag(tag));
+    return out;
   }
   /** Convenience for tests: depth-first search by class name. @param {string} cls @returns {StubElement[]} */
   findAll(cls) {

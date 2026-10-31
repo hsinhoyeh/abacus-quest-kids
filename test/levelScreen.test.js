@@ -141,3 +141,16 @@ test('destroy empties the root', () => {
   screen.destroy();
   assert.equal(root.children.length, 0);
 });
+
+test('the XP readout is translatable via strings.xp', () => {
+  const root = createRoot();
+  mount({
+    root: /** @type {any} */ (root),
+    port: createFakeSorobanPort(2),
+    problems: PROBLEMS,
+    onDone: () => {},
+    now: () => 1_000,
+    strings: { xp: '經驗 {xp}' },
+  });
+  assert.equal(byRole(root, 'xp').textContent, '經驗 0');
+});

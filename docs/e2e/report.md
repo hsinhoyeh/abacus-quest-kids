@@ -43,3 +43,15 @@ No horizontal scroll in any screenshot. Bead targets stay ≥ 44 px. `fuse.css` 
 6. **Language:** the app applies the stored `lang` to `<html lang>`. The language switch and the browser-language default are left to #8.
 7. **Best time is shown on the map cards** (the kid races the clock). It uses resultScreen's `formatMs`.
 8. The S1 hardcoded "set 7" demo (`mountSetLevel`) is replaced by the real set packs. Its test is replaced by app string-table tests; the same behaviour is covered by `setNumberScreen` tests and the e2e.
+
+## Flow 3: 繁體中文 + 注音 (issue #8)
+Chromium 390×844, real `localStorage`, nothing mocked (`test/e2e/zh-tw.spec.js`). The other specs pin the browser locale to `en-US`.
+
+| # | Step | Asserted | Screenshot |
+|---|------|----------|-----------|
+| 17 | English first run, add `Kai`, tap **中文** in the top bar | same screen switches live (no reload), `<html lang="zh-TW">`, map title 礦坑地圖, depths 地表 / 洞穴 / 深礦 / 地獄 / 終界, 30+ `rt` elements, no Han character left without `ruby`/`rt`, first `rt` sits right of its character, no horizontal scroll | [17](screenshots/17-zh-map.png) |
+| 18 | Open *挖礦：不進位*, **開始！** | 3-2-1, level shows 挖！/ 跳過 / 經驗, hearts, fuse; every Han character annotated; language switch hidden mid-run; no horizontal scroll | [18](screenshots/18-zh-level.png) |
+| – | Reload; tap **EN** | 中文 choice survives a reload; EN removes every `rt`, `<html lang="en">`, parent screen reads "Progress for Kai" | – |
+| – | Browser locale `zh-TW`, empty storage | defaults to 中文 with 注音 | – |
+
+Layout check (looked at both screenshots plus a 2x crop and the parent screen): 注音 sits in a vertical column to the right of each character with the tone mark beside it (neutral ˙ on top); no overlap and no clipping; buttons stay at least 48 px tall. Fixes made while looking: 注音 size raised to `max(.55em, 11px)` (was unreadably small at 8-9 px), Chinese button/heading font sizes raised (the pixel font is only used for Latin), and the missing 文 reading found by the e2e "every Han character has 注音" check was added (the language button label now lives in the string table so the coverage test sees it).

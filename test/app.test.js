@@ -1,17 +1,21 @@
-// app.js is wiring (covered end to end by test/e2e); here: its string table.
+// app.js is wiring (covered end to end by test/e2e); its strings live in
+// js/i18n and are tested in test/i18n.test.js. Here: every shipped pack has a
+// title in both languages, and the titles are distinct so the map is readable.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STRINGS } from '../js/app.js';
+import { translate } from '../js/i18n/index.js';
 import { PACKS } from '../js/packs/index.js';
 
-test('every pack has an English title in the app string table', () => {
-  for (const p of PACKS) {
-    const title = STRINGS.packTitles[p.titleKey];
-    assert.ok(typeof title === 'string' && title.length > 0, p.titleKey);
-  }
-});
+for (const lang of /** @type {const} */ (['en', 'zh-TW'])) {
+  test(`every pack has a ${lang} title in the string table`, () => {
+    for (const p of PACKS) {
+      const title = translate(lang, p.titleKey);
+      assert.ok(title.length > 0 && title !== p.titleKey, p.titleKey);
+    }
+  });
 
-test('pack titles are distinct so the map is readable', () => {
-  const titles = PACKS.map((p) => STRINGS.packTitles[p.titleKey]);
-  assert.equal(new Set(titles).size, titles.length);
-});
+  test(`${lang} pack titles are distinct`, () => {
+    const titles = PACKS.map((p) => translate(lang, p.titleKey));
+    assert.equal(new Set(titles).size, titles.length);
+  });
+}
