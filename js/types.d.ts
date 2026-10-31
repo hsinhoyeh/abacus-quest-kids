@@ -168,3 +168,15 @@ export interface Rod {
   heaven: 0 | 1;
   earth: number;
 }
+
+// ---- Result screen (S8, ui/resultScreen.js) ----
+
+/** What the result screen shows after a run ends. `over` = all hearts lost. */
+export interface ResultSummary {
+  status: 'done' | 'over';
+  /** 1..3 on `done`; ignored on `over`. */
+  stars: number;
+  xp: number;
+  ms: number;
+  newRecord: boolean;
+}
